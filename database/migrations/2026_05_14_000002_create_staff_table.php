@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->text('bio')->nullable();
+            $table->string('avatar')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

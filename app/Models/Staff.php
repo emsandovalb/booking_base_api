@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Staff extends Model
 {
@@ -18,11 +19,16 @@ class Staff extends Model
         'email',
         'phone',
         'bio',
+        'avatar',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+    ];
+
+    protected $appends = [
+        'avatar_url',
     ];
 
     public function user()
@@ -50,5 +56,18 @@ class Staff extends Model
         return $this->belongsToMany(Court::class, 'staff_services')
             ->withPivot(['is_primary'])
             ->withTimestamps();
+    }
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (!$this->avatar) {
+            return null;
+        }
+
+        if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
+            return $this->avatar;
+        }
+
+        return Storage::url($this->avatar);
     }
 }

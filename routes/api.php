@@ -43,6 +43,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/resources/{resource}', [ResourceController::class, 'show']);
     Route::get('/resources/{resource}/availability', [ResourceController::class, 'availability']);
     Route::get('/resources/{resource}/staff', [ResourceStaffController::class, 'index']);
+    Route::get('/staff/roles', [StaffController::class, 'roles']);
     Route::get('/staff', [StaffController::class, 'index']);
     Route::get('/staff/{staff}', [StaffController::class, 'show']);
 
@@ -72,6 +73,13 @@ Route::prefix('v1')->group(function () {
         Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
         Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
         Route::post('/reservations/{reservation}/rebook', [ReservationController::class, 'rebook']);
+
+        Route::post('/staff', [StaffController::class, 'store']);
+        Route::match(['put', 'patch'], '/staff/{staff}', [StaffController::class, 'update']);
+        Route::delete('/staff/{staff}', [StaffController::class, 'destroy']);
+        Route::patch('/staff/{staff}/deactivate', [StaffController::class, 'deactivate']);
+        Route::post('/staff/{staff}/services', [StaffController::class, 'attachService']);
+        Route::delete('/staff/{staff}/services/{resourceId}', [StaffController::class, 'detachService']);
 
         Route::get('/bookings', [BookingController::class, 'index']);
         Route::post('/bookings', [BookingController::class, 'store']);
