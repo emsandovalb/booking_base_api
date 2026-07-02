@@ -59,13 +59,13 @@ return [
         'name' => 'home_search_hint',
         'module' => 'home',
         'description' => 'Search hint on home',
-        'translations' => ['en' => 'Search', 'es' => 'Buscar'],
+        'translations' => ['en' => 'Search services', 'es' => 'Buscar servicios'],
     ],
     [
         'name' => 'home_good_morning',
         'module' => 'home',
         'description' => 'Greeting on home',
-        'translations' => ['en' => 'Good morning', 'es' => 'Buenos dÃ­as'],
+        'translations' => ['en' => 'Your style, in expert hands', 'es' => 'Tu estilo, en manos expertas'],
     ],
     [
         'name' => 'home_categories',
@@ -83,25 +83,25 @@ return [
         'name' => 'home_popular',
         'module' => 'home',
         'description' => 'Popular ground heading',
-        'translations' => ['en' => 'Popular ground', 'es' => 'Populares'],
+        'translations' => ['en' => 'Featured services', 'es' => 'Servicios destacados'],
     ],
     [
         'name' => 'home_nearby',
         'module' => 'home',
         'description' => 'Nearby heading',
-        'translations' => ['en' => 'Nearby you', 'es' => 'Cerca de ti'],
+        'translations' => ['en' => 'Premium experiences', 'es' => 'Experiencias premium'],
     ],
     [
         'name' => 'login_title',
         'module' => 'auth',
         'description' => 'Login page title',
-        'translations' => ['en' => 'Log in', 'es' => 'Iniciar sesiÃ³n'],
+        'translations' => ['en' => 'Log in', 'es' => 'Iniciá sesión'],
     ],
     [
         'name' => 'login_subtitle',
         'module' => 'auth',
         'description' => 'Login subtitle',
-        'translations' => ['en' => 'Welcome back', 'es' => 'Bienvenido de nuevo'],
+        'translations' => ['en' => 'Welcome back', 'es' => 'Reservá tu próxima cita'],
     ],
     [
         'name' => 'login_email',
@@ -125,7 +125,7 @@ return [
         'name' => 'login_button',
         'module' => 'auth',
         'description' => 'Login button label',
-        'translations' => ['en' => 'Log in', 'es' => 'Iniciar sesiÃ³n'],
+        'translations' => ['en' => 'Log in', 'es' => 'Ingresar'],
     ],
     [
         'name' => 'login_skip',
@@ -161,7 +161,7 @@ return [
         'name' => 'login_signup_prompt',
         'module' => 'auth',
         'description' => 'Sign up prompt',
-        'translations' => ['en' => "Don't have an account? Sign up", 'es' => 'Â¿No tienes cuenta? RegÃ­strate'],
+        'translations' => ['en' => "Don't have an account? Sign up", 'es' => '¿No tenés cuenta? Registrate'],
     ],
     [
         'name' => 'login_error',
@@ -215,13 +215,13 @@ return [
         'name' => 'profile_settings',
         'module' => 'profile',
         'description' => 'Settings option',
-        'translations' => ['en' => 'Settings', 'es' => 'ConfiguraciÃ³n'],
+        'translations' => ['en' => 'Settings', 'es' => 'Configuración'],
     ],
     [
         'name' => 'profile_privacy',
         'module' => 'profile',
         'description' => 'Privacy policy option',
-        'translations' => ['en' => 'Privacy policy', 'es' => 'PolÃ­tica de privacidad'],
+        'translations' => ['en' => 'Privacy policy', 'es' => 'Política de privacidad'],
     ],
     [
         'name' => 'profile_help',
@@ -239,19 +239,19 @@ return [
         'name' => 'profile_rate_us',
         'module' => 'profile',
         'description' => 'Rate us option',
-        'translations' => ['en' => 'Rate us', 'es' => 'CalifÃ­canos'],
+        'translations' => ['en' => 'Rate us', 'es' => 'Califícanos'],
     ],
     [
         'name' => 'profile_my_grounds',
         'module' => 'profile',
         'description' => 'My grounds shortcut',
-        'translations' => ['en' => 'My grounds', 'es' => 'Mis canchas'],
+        'translations' => ['en' => 'My services', 'es' => 'Mis servicios'],
     ],
     [
         'name' => 'profile_logout',
         'module' => 'profile',
         'description' => 'Logout button',
-        'translations' => ['en' => 'Log out', 'es' => 'Cerrar sesiÃ³n'],
+        'translations' => ['en' => 'Log out', 'es' => 'Cerrar sesión'],
     ],
     [
         'name' => 'profile_logout_confirm',
@@ -259,7 +259,7 @@ return [
         'description' => 'Logout confirmation message',
         'translations' => [
             'en' => 'Are you sure you want to log out?',
-            'es' => 'Â¿Seguro que deseas cerrar sesiÃ³n?',
+            'es' => '¿Seguro que querés cerrar sesión?',
         ],
     ],
     [
@@ -344,19 +344,19 @@ return [
         'name' => 'booking_details_title',
         'module' => 'booking',
         'description' => 'Booking details screen title',
-        'translations' => ['en' => 'Booking details', 'es' => 'Detalles de la reserva'],
+        'translations' => ['en' => 'Appointment details', 'es' => 'Detalle de la cita'],
     ],
     [
         'name' => 'booking_detail_ground_label',
         'module' => 'booking',
         'description' => 'Ground label',
-        'translations' => ['en' => 'Ground', 'es' => 'Cancha'],
+        'translations' => ['en' => 'Service', 'es' => 'Servicio'],
     ],
     [
         'name' => 'booking_detail_code',
         'module' => 'booking',
         'description' => 'Booking code label',
-        'translations' => ['en' => 'Booking Code', 'es' => 'CÃ³digo de reserva'],
+        'translations' => ['en' => 'Booking code', 'es' => 'Código de cita'],
     ],
     [
         'name' => 'booking_detail_date',
@@ -399,15 +399,15 @@ return [
         'module' => 'booking',
         'description' => 'Cancellation limit warning',
         'translations' => [
-            'en' => 'Cancellation not allowed within 24 hours of start time',
-            'es' => 'No se permite cancelar dentro de las 24 horas previas al inicio',
+            'en' => 'Cancellation not allowed within 4 hours of start time',
+            'es' => 'No se permite cancelar dentro de las 4 horas previas al inicio',
         ],
     ],
     [
         'name' => 'booking_cancel_title',
         'module' => 'booking',
         'description' => 'Cancel booking dialog title',
-        'translations' => ['en' => 'Cancel booking', 'es' => 'Cancelar reserva'],
+        'translations' => ['en' => 'Cancel booking', 'es' => 'Cancelar cita'],
     ],
     [
         'name' => 'booking_cancel_confirm',
@@ -415,7 +415,7 @@ return [
         'description' => 'Cancel confirmation copy',
         'translations' => [
             'en' => 'Are you sure you want to cancel this booking?',
-            'es' => 'Â¿Seguro que deseas cancelar esta reserva?',
+            'es' => '¿Seguro que querés cancelar esta cita?',
         ],
     ],
     [
@@ -428,13 +428,13 @@ return [
         'name' => 'booking_cancel_confirm_action',
         'module' => 'booking',
         'description' => 'Confirm cancellation button',
-        'translations' => ['en' => 'Yes, cancel', 'es' => 'SÃ­, cancelar'],
+        'translations' => ['en' => 'Yes, cancel', 'es' => 'Sí, cancelar'],
     ],
     [
         'name' => 'booking_cancelled',
         'module' => 'booking',
         'description' => 'Cancellation success message',
-        'translations' => ['en' => 'Booking cancelled', 'es' => 'Reserva cancelada'],
+        'translations' => ['en' => 'Booking cancelled', 'es' => 'Cita cancelada'],
     ],
     [
         'name' => 'booking_cancel_failed',
@@ -446,15 +446,15 @@ return [
         'name' => 'booking_rebook_success_title',
         'module' => 'booking',
         'description' => 'Re-book success title',
-        'translations' => ['en' => 'Re-booked', 'es' => 'Reserva reprogramada'],
+        'translations' => ['en' => 'Re-booked', 'es' => 'Cita reprogramada'],
     ],
     [
         'name' => 'booking_rebook_success_subtitle',
         'module' => 'booking',
         'description' => 'Re-book success message',
         'translations' => [
-            'en' => 'Your booking has been re-scheduled. Cancellations must be made at least 24 hours before the start time.',
-            'es' => 'Tu reserva ha sido reprogramada. Las cancelaciones deben hacerse al menos 24 horas antes del inicio.',
+            'en' => 'Your booking has been re-scheduled. Cancellations must be made at least 4 hours before the start time.',
+            'es' => 'Tu cita ha sido reprogramada. Las cancelaciones deben hacerse al menos 4 horas antes del inicio.',
         ],
     ],
     [
@@ -503,46 +503,46 @@ return [
         'name' => 'grounds_admin_required',
         'module' => 'grounds',
         'description' => 'Admin required message',
-        'translations' => ['en' => 'Please log in as admin', 'es' => 'Inicia sesiÃ³n como administrador'],
+        'translations' => ['en' => 'Please log in as admin', 'es' => 'Iniciá sesión como administrador'],
     ],
     [
         'name' => 'grounds_name_required',
         'module' => 'grounds',
         'description' => 'Name/address validation',
-        'translations' => ['en' => 'Please fill name and address first', 'es' => 'Completa el nombre y la direcciÃ³n primero'],
+        'translations' => ['en' => 'Please fill name and address first', 'es' => 'Completa el nombre y la dirección primero'],
     ],
     [
         'name' => 'grounds_created_title',
         'module' => 'grounds',
         'description' => 'Ground created title',
-        'translations' => ['en' => 'Ground Created', 'es' => 'Cancha creada'],
+        'translations' => ['en' => 'Service created', 'es' => 'Servicio creado'],
     ],
     [
         'name' => 'grounds_created_subtitle',
         'module' => 'grounds',
         'description' => 'Ground created description',
         'translations' => [
-            'en' => 'Your ground has been created successfully and is now listed under My grounds.',
-            'es' => 'Tu cancha se creÃ³ correctamente y ahora aparece en Mis canchas.',
+            'en' => 'Your service has been created successfully and is now listed under My services.',
+            'es' => 'Tu servicio se creó correctamente y ahora aparece en Mis servicios.',
         ],
     ],
     [
         'name' => 'grounds_back_to_list',
         'module' => 'grounds',
         'description' => 'Back to my grounds button',
-        'translations' => ['en' => 'Back to My grounds', 'es' => 'Volver a Mis canchas'],
+        'translations' => ['en' => 'Back to My services', 'es' => 'Volver a Mis servicios'],
     ],
     [
         'name' => 'grounds_create_failed',
         'module' => 'grounds',
         'description' => 'Ground creation error label',
-        'translations' => ['en' => 'Failed to create ground', 'es' => 'No se pudo crear la cancha'],
+        'translations' => ['en' => 'Failed to create service', 'es' => 'No se pudo crear el servicio'],
     ],
     [
         'name' => 'grounds_category_title',
         'module' => 'grounds',
         'description' => 'Category picker title',
-        'translations' => ['en' => 'Ground category', 'es' => 'CategorÃ­a de cancha'],
+        'translations' => ['en' => 'Service type', 'es' => 'Tipo de servicio'],
     ],
     [
         'name' => 'btn_continue',
@@ -554,19 +554,19 @@ return [
         'name' => 'grounds_my_title',
         'module' => 'grounds',
         'description' => 'My grounds title',
-        'translations' => ['en' => 'My grounds', 'es' => 'Mis canchas'],
+        'translations' => ['en' => 'My services', 'es' => 'Mis servicios'],
     ],
     [
         'name' => 'grounds_admin_only',
         'module' => 'grounds',
         'description' => 'Admin only warning',
-        'translations' => ['en' => 'Only administrators can access this section', 'es' => 'Solo los administradores pueden acceder a esta secciÃ³n'],
+        'translations' => ['en' => 'Only administrators can access this section', 'es' => 'Solo los administradores pueden acceder a esta sección'],
     ],
     [
         'name' => 'grounds_hour',
         'module' => 'grounds',
         'description' => 'Hour unit label',
-        'translations' => ['en' => 'Hour', 'es' => 'Hora'],
+        'translations' => ['en' => 'Hour', 'es' => 'hora'],
     ],
     [
         'name' => 'btn_add',
@@ -579,8 +579,8 @@ return [
         'module' => 'onboarding',
         'description' => 'Onboarding subtitle',
         'translations' => [
-            'en' => 'Book courts and discover nearby sports events.',
-            'es' => 'Reserva canchas y descubre eventos deportivos cercanos.',
+            'en' => 'Book premium barber services and manage appointments with ease.',
+            'es' => 'Reservá servicios premium de barbería y administrá citas con facilidad.',
         ],
     ],
     [
@@ -599,7 +599,7 @@ return [
         'name' => 'bookings_title',
         'module' => 'booking',
         'description' => 'Bookings tab title',
-        'translations' => ['en' => 'My booking', 'es' => 'Mis reservas'],
+        'translations' => ['en' => 'My appointments', 'es' => 'Mis citas'],
     ],
     [
         'name' => 'bookings_tab_upcoming',
@@ -617,13 +617,13 @@ return [
         'name' => 'bookings_login_prompt',
         'module' => 'booking',
         'description' => 'Login prompt for bookings',
-        'translations' => ['en' => 'Please log in to view your bookings', 'es' => 'Inicia sesiÃ³n para ver tus reservas'],
+        'translations' => ['en' => 'Please log in to view your bookings', 'es' => 'Iniciá sesión para ver tus citas'],
     ],
     [
         'name' => 'bookings_empty_active',
         'module' => 'booking',
         'description' => 'Empty upcoming message',
-        'translations' => ['en' => 'No active bookings yet.', 'es' => 'AÃºn no tienes reservas activas.'],
+        'translations' => ['en' => 'No active bookings yet.', 'es' => 'Aún no tenés citas activas.'],
     ],
     [
         'name' => 'bookings_empty_completed',
@@ -677,21 +677,21 @@ return [
         'name' => 'payment_login_required',
         'module' => 'booking',
         'description' => 'Login required to pay',
-        'translations' => ['en' => 'Please log in to complete booking', 'es' => 'Inicia sesiÃ³n para completar la reserva'],
+        'translations' => ['en' => 'Please log in to complete booking', 'es' => 'Iniciá sesión para completar la cita'],
     ],
     [
         'name' => 'booking_success_title',
         'module' => 'booking',
         'description' => 'Booking success title',
-        'translations' => ['en' => 'Booking Successful', 'es' => 'Reserva exitosa'],
+        'translations' => ['en' => 'Appointment confirmed', 'es' => 'Cita confirmada'],
     ],
     [
         'name' => 'booking_success_subtitle',
         'module' => 'booking',
         'description' => 'Booking success subtitle',
         'translations' => [
-            'en' => 'Your booking was placed successfully. Note: Cancellations must be made at least 24 hours before the start time.',
-            'es' => 'Tu reserva se realizÃ³ correctamente. Nota: las cancelaciones deben hacerse al menos 24 horas antes del inicio.',
+            'en' => 'Your booking was placed successfully. Note: Cancellations must be made at least 4 hours before the start time.',
+            'es' => 'Tu cita se realizó correctamente. Nota: las cancelaciones deben hacerse al menos 4 horas antes del inicio.',
         ],
     ],
     [
@@ -767,7 +767,7 @@ return [
         'name' => 'grounds_add_title',
         'module' => 'grounds',
         'description' => 'Add ground title',
-        'translations' => ['en' => 'Add ground', 'es' => 'Agregar cancha'],
+        'translations' => ['en' => 'Add service', 'es' => 'Agregar servicio'],
     ],
     [
         'name' => 'form_name',
@@ -797,7 +797,7 @@ return [
         'name' => 'grounds_operating_hours',
         'module' => 'grounds',
         'description' => 'Operating hours label',
-        'translations' => ['en' => 'Operating hours', 'es' => 'Horario de atenciÃ³n'],
+        'translations' => ['en' => 'Shop hours', 'es' => 'Horario del local'],
     ],
     [
         'name' => 'grounds_opens',
@@ -815,7 +815,7 @@ return [
         'name' => 'grounds_duration_label',
         'module' => 'grounds',
         'description' => 'Duration per booking label',
-        'translations' => ['en' => 'Duration per booking', 'es' => 'DuraciÃ³n por reserva'],
+        'translations' => ['en' => 'Duration per booking', 'es' => 'Duración por reserva'],
     ],
     [
         'name' => 'grounds_duration_one',
@@ -863,7 +863,7 @@ return [
         'name' => 'grounds_edit_details',
         'module' => 'grounds',
         'description' => 'Edit ground title',
-        'translations' => ['en' => 'Edit ground', 'es' => 'Editar cancha'],
+        'translations' => ['en' => 'Edit service', 'es' => 'Editar servicio'],
     ],
     [
         'name' => 'grounds_activate',
@@ -1001,48 +1001,46 @@ return [
         'name' => 'ground_rating_sample',
         'module' => 'grounds',
         'description' => 'Sample rating text',
-        'translations' => ['en' => '4.5 (140 Reviews)', 'es' => '4.5 (140 reseÃ±as)'],
+        'translations' => ['en' => '4.9 (212 Reviews)', 'es' => '4.9 (212 reseñas)'],
     ],
     [
         'name' => 'ground_price_sample',
         'module' => 'grounds',
         'description' => 'Sample price text',
-        'translations' => ['en' => 'S/ 100.00', 'es' => 'S/ 100.00'],
+        'translations' => ['en' => 'CRC 6 000', 'es' => 'CRC 6 000'],
     ],
     [
         'name' => 'ground_description_placeholder',
         'module' => 'grounds',
         'description' => 'Placeholder description',
         'translations' => [
-            'en' =>
-                'Ultricies arcu venenatis in lorem faucibus lobortis at. east odio varius nulla augue aliquam nunc est sit pulv convallis magna est scelerisque Ultricies arcu venenâ€¦',
-            'es' =>
-                'Ultricies arcu venenatis in lorem faucibus lobortis at. east odio varius nulla augue aliquam nunc est sit pulv convallis magna est scelerisque Ultricies arcu venenâ€¦',
+            'en' => 'Reserve this service by choosing an available time slot.',
+            'es' => 'Reservá este servicio eligiendo un horario disponible.',
         ],
     ],
     [
         'name' => 'ground_list_title',
         'module' => 'grounds',
         'description' => 'Ground list section title',
-        'translations' => ['en' => 'Ground list', 'es' => 'Lista de canchas'],
+        'translations' => ['en' => 'Available services', 'es' => 'Servicios disponibles'],
     ],
     [
         'name' => 'ground_main_label',
         'module' => 'grounds',
         'description' => 'Main ground label',
-        'translations' => ['en' => 'Main ground', 'es' => 'Cancha principal'],
+        'translations' => ['en' => 'Signature option', 'es' => 'Opción principal'],
     ],
     [
         'name' => 'ground_login_required',
         'module' => 'grounds',
         'description' => 'Login required to book',
-        'translations' => ['en' => 'Please log in to book', 'es' => 'Inicia sesiÃ³n para reservar'],
+        'translations' => ['en' => 'Please log in to book', 'es' => 'Iniciá sesión para reservar'],
     ],
     [
         'name' => 'ground_book_now',
         'module' => 'grounds',
         'description' => 'Book now button',
-        'translations' => ['en' => 'Book now', 'es' => 'Reservar ahora'],
+        'translations' => ['en' => 'Book now', 'es' => 'Reservar cita'],
     ],
     [
         'name' => 'home_hello',
@@ -1153,7 +1151,7 @@ return [
         'name' => 'grounds_created_appbar',
         'module' => 'grounds',
         'description' => 'Ground created app bar title',
-        'translations' => ['en' => 'Courts Created', 'es' => 'Canchas creadas'],
+        'translations' => ['en' => 'Services created', 'es' => 'Servicios creados'],
     ],
     [
         'name' => 'booking_proceed_payment',
@@ -1165,7 +1163,7 @@ return [
         'name' => 'select_date_time_title',
         'module' => 'booking',
         'description' => 'Select date and time title',
-        'translations' => ['en' => 'Select date & time', 'es' => 'Selecciona fecha y hora'],
+        'translations' => ['en' => 'Select appointment time', 'es' => 'Elegí tu horario'],
     ],
     [
         'name' => 'select_time',
@@ -1207,7 +1205,7 @@ return [
         'name' => 'nav_booking',
         'module' => 'navigation',
         'description' => 'Bookings tab label',
-        'translations' => ['en' => 'Booking', 'es' => 'Reservas'],
+        'translations' => ['en' => 'Appointments', 'es' => 'Citas'],
     ],
     [
         'name' => 'nav_reservations',

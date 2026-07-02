@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ResourceController;
 use App\Http\Controllers\Api\ResourceStaffController;
 use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\ReservationController;
+use App\Http\Controllers\Api\AppConfigController;
 
 /**
  * ALIASES SIN VERSIÓN (compatibilidad con cliente viejo)
@@ -56,6 +57,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/tournaments', [TournamentController::class, 'index']);
     Route::get('/tournaments/{tournament}', [TournamentController::class, 'show']);
     Route::get('/tournaments/{tournament}/teams', [TournamentController::class, 'teams']);
+    Route::get('/app-config', [AppConfigController::class, 'show']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);

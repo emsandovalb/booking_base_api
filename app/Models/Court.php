@@ -12,8 +12,10 @@ class Court extends Model
     protected $fillable = [
         'name',
         'address',
+        'description',
         'category',
         'duration_hours',
+        'duration_minutes',
         'price_per_hour',
         'rating',
         'lat',
@@ -25,6 +27,7 @@ class Court extends Model
         'contact_phone',
         'open_hour',
         'close_hour',
+        'business_hours_note',
         'status',
     ];
 

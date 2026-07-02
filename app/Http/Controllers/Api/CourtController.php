@@ -17,6 +17,7 @@ class CourtController extends Controller
     public function index(Request $request)
     {
         $q = Court::query();
+        $q->with(['staff.role']);
         $q->where('status', 'active');
         if ($search = $request->query('q')) {
             $q->where(function ($qq) use ($search) {
@@ -73,7 +74,7 @@ class CourtController extends Controller
         if (!$this->canViewCourt($request, $court)) {
             return response()->json(['message' => 'Not found'], 404);
         }
-        return $court;
+        return $court->load(['staff.role']);
     }
 
     public function availability(Request $request, Court $court)
@@ -130,10 +131,13 @@ class CourtController extends Controller
         $data = $request->validate([
             'name' => 'required',
             'address' => 'required',
+            'description' => 'nullable|string',
             'category' => 'nullable|string',
             'duration_hours' => 'nullable|integer|min:1',
+            'duration_minutes' => 'nullable|integer|min:1|max:1440',
             'open_hour' => 'nullable|string',
             'close_hour' => 'nullable|string',
+            'business_hours_note' => 'nullable|string',
             'price_per_hour' => 'nullable|numeric',
             'rating' => 'nullable|numeric',
             'contact_email' => 'nullable|email',
@@ -157,7 +161,8 @@ class CourtController extends Controller
             return response()->json(['data' => []]);
         }
         $perPage = $this->perPageFromRequest($request);
-        $result = Court::where('owner_id', $request->user()->id)
+        $result = Court::with(['staff.role'])
+            ->where('owner_id', $request->user()->id)
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
@@ -172,10 +177,13 @@ class CourtController extends Controller
         $data = $request->validate([
             'name' => 'sometimes|required|string',
             'address' => 'sometimes|required|string',
+            'description' => 'sometimes|nullable|string',
             'category' => 'sometimes|nullable|string',
             'duration_hours' => 'sometimes|nullable|integer|min:1',
+            'duration_minutes' => 'sometimes|nullable|integer|min:1|max:1440',
             'open_hour' => 'sometimes|nullable|string',
             'close_hour' => 'sometimes|nullable|string',
+            'business_hours_note' => 'sometimes|nullable|string',
             'price_per_hour' => 'sometimes|nullable|numeric',
             'rating' => 'sometimes|nullable|numeric',
             'contact_email' => 'sometimes|nullable|email',

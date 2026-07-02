@@ -133,8 +133,8 @@ class BookingController extends Controller
             return response()->json($booking->load(['court', 'staff']));
         }
         $hoursUntil = now()->diffInHours($booking->date, false);
-        if ($hoursUntil < 24) {
-            return response()->json(['message' => 'Cannot cancel within 24 hours of the start time'], 422);
+        if ($hoursUntil < 4) {
+            return response()->json(['message' => 'Cannot cancel within 4 hours of the start time'], 422);
         }
         $booking->status = 'cancelled';
         $booking->save();
