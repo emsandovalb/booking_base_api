@@ -57,7 +57,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/tournaments', [TournamentController::class, 'index']);
     Route::get('/tournaments/{tournament}', [TournamentController::class, 'show']);
     Route::get('/tournaments/{tournament}/teams', [TournamentController::class, 'teams']);
-    Route::get('/app-config', [AppConfigController::class, 'show']);
+    Route::get('/app-config', [AppConfigController::class, 'showDefault']);
+    Route::get('/businesses/{slug}/app-config', [AppConfigController::class, 'showForBusinessSlug']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);

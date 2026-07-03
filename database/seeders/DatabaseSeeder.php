@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
 
         Event::factory()->count(5)->create();
 
+        $this->call(BusinessSeeder::class);
         $this->call(BarbershopDemoSeeder::class);
         $this->call(LanguageSeeder::class);
     }
