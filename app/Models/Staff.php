@@ -14,6 +14,7 @@ class Staff extends Model
 
     protected $fillable = [
         'user_id',
+        'business_id',
         'staff_role_id',
         'name',
         'email',
@@ -34,6 +35,11 @@ class Staff extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function business()
+    {
+        return $this->belongsTo(Business::class);
     }
 
     public function role()

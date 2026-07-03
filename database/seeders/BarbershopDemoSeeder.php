@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Court;
+use App\Models\Business;
 use App\Models\Staff;
 use App\Models\StaffRole;
 use App\Models\StaffService;
@@ -30,6 +31,21 @@ class BarbershopDemoSeeder extends Seeder
                 'description' => 'Provides haircut, beard, and grooming services.',
             ]
         );
+
+        $consultantRole = StaffRole::updateOrCreate(
+            ['slug' => 'consultant'],
+            [
+                'name' => 'Consultant',
+                'description' => 'Provides customer support and style guidance.',
+            ]
+        );
+
+        $tresAmigosBusiness = Business::query()
+            ->where('slug', 'barberia-tres-amigos')
+            ->first();
+        $salonAuroraBusiness = Business::query()
+            ->where('slug', 'salon-aurora')
+            ->first();
 
         $shopAddress = 'Puntarenas, El Roble, Costa Rica';
         $shopPhone = '+506 8888-3366';
@@ -164,9 +180,13 @@ class BarbershopDemoSeeder extends Seeder
         $serviceModels = [];
         foreach ($services as $service) {
             $serviceModels[$service['name']] = Court::updateOrCreate(
-                ['name' => $service['name']],
+                [
+                    'name' => $service['name'],
+                    'business_id' => $tresAmigosBusiness?->id,
+                ],
                 [
                     'owner_id' => $owner->id,
+                    'business_id' => $tresAmigosBusiness?->id,
                     'address' => $shopAddress,
                     'description' => $service['description'],
                     'category' => $service['category'],
@@ -223,9 +243,13 @@ class BarbershopDemoSeeder extends Seeder
 
         foreach ($barbers as $barberData) {
             $staff = Staff::updateOrCreate(
-                ['name' => $barberData['name']],
+                [
+                    'name' => $barberData['name'],
+                    'business_id' => $tresAmigosBusiness?->id,
+                ],
                 [
                     'user_id' => null,
+                    'business_id' => $tresAmigosBusiness?->id,
                     'staff_role_id' => $barberRole->id,
                     'email' => $barberData['email'],
                     'phone' => $barberData['phone'],
@@ -251,6 +275,61 @@ class BarbershopDemoSeeder extends Seeder
                     ]
                 );
             }
+        }
+
+        if ($salonAuroraBusiness) {
+            $salonService = Court::updateOrCreate(
+                [
+                    'name' => 'Limpieza facial express',
+                    'business_id' => $salonAuroraBusiness->id,
+                ],
+                [
+                    'owner_id' => $owner->id,
+                    'business_id' => $salonAuroraBusiness->id,
+                    'address' => 'San José, Costa Rica',
+                    'description' => 'Servicio mínimo de demo para validar el tenant de Salón Aurora.',
+                    'category' => 'facial',
+                    'duration_hours' => 1,
+                    'duration_minutes' => 30,
+                    'contact_email' => 'hola@salonaurora.com',
+                    'contact_phone' => '+506 7000-0000',
+                    'open_hour' => '09:00',
+                    'close_hour' => '18:00',
+                    'business_hours_note' => 'Lunes a sábado, agenda limitada de demo.',
+                    'price_per_hour' => 12000.00,
+                    'rating' => 4.7,
+                    'facilities' => ['Atención personalizada', 'Cuidado facial básico'],
+                    'images' => ['assets/branding/service_placeholder.png'],
+                    'status' => 'active',
+                ]
+            );
+
+            $salonStaff = Staff::updateOrCreate(
+                [
+                    'name' => 'Alicia Demo',
+                    'business_id' => $salonAuroraBusiness->id,
+                ],
+                [
+                    'user_id' => null,
+                    'business_id' => $salonAuroraBusiness->id,
+                    'staff_role_id' => $consultantRole->id,
+                    'email' => 'alicia@salonaurora.com',
+                    'phone' => '+506 7000-0001',
+                    'bio' => 'Demo staff member for Salón Aurora tenant scoping.',
+                    'avatar' => 'assets/branding/barber_placeholder.png',
+                    'is_active' => true,
+                ]
+            );
+
+            StaffService::updateOrCreate(
+                [
+                    'staff_id' => $salonStaff->id,
+                    'court_id' => $salonService->id,
+                ],
+                [
+                    'is_primary' => true,
+                ]
+            );
         }
     }
 }

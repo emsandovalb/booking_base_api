@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Court;
 use App\Models\Booking;
+use App\Support\BusinessContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -16,7 +17,13 @@ class CourtController extends Controller
 {
     public function index(Request $request)
     {
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
         $q = Court::query();
+        $context->applyTo($q);
         $q->with(['staff.role']);
         $q->where('status', 'active');
         if ($search = $request->query('q')) {
@@ -128,6 +135,10 @@ class CourtController extends Controller
         if ($request->user()->role !== 'admin') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
         $data = $request->validate([
             'name' => 'required',
             'address' => 'required',
@@ -150,6 +161,7 @@ class CourtController extends Controller
         }
         $court = Court::create(array_merge($data, [
             'owner_id' => $request->user()->id,
+            'business_id' => $context->businessId(),
             'status' => 'active',
         ]));
         return response()->json($court, 201);
@@ -160,12 +172,16 @@ class CourtController extends Controller
         if ($request->user()->role !== 'admin') {
             return response()->json(['data' => []]);
         }
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
         $perPage = $this->perPageFromRequest($request);
-        $result = Court::with(['staff.role'])
+        $query = Court::with(['staff.role'])
             ->where('owner_id', $request->user()->id)
-            ->latest()
-            ->paginate($perPage)
-            ->withQueryString();
+            ->latest();
+        $context->applyTo($query);
+        $result = $query->paginate($perPage)->withQueryString();
         return $this->paginatedResponse($result);
     }
 

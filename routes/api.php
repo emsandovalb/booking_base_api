@@ -13,6 +13,45 @@ use App\Http\Controllers\Api\ResourceStaffController;
 use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\AppConfigController;
+use App\Models\Court;
+use App\Models\Staff;
+use App\Support\BusinessContext;
+
+Route::bind('resource', function (mixed $value) {
+    $context = BusinessContext::fromRequest(request());
+    if (!$context->isValid()) {
+        return null;
+    }
+
+    $query = Court::query()->whereKey($value);
+    $context->applyTo($query);
+
+    return $query->first();
+});
+
+Route::bind('court', function (mixed $value) {
+    $context = BusinessContext::fromRequest(request());
+    if (!$context->isValid()) {
+        return null;
+    }
+
+    $query = Court::query()->whereKey($value);
+    $context->applyTo($query);
+
+    return $query->first();
+});
+
+Route::bind('staff', function (mixed $value) {
+    $context = BusinessContext::fromRequest(request());
+    if (!$context->isValid()) {
+        return null;
+    }
+
+    $query = Staff::query()->whereKey($value);
+    $context->applyTo($query);
+
+    return $query->first();
+});
 
 /**
  * ALIASES SIN VERSIÓN (compatibilidad con cliente viejo)

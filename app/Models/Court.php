@@ -23,6 +23,7 @@ class Court extends Model
         'facilities',
         'images',
         'owner_id',
+        'business_id',
         'contact_email',
         'contact_phone',
         'open_hour',
@@ -39,6 +40,11 @@ class Court extends Model
     public function owner()
     {
         return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function business()
+    {
+        return $this->belongsTo(Business::class);
     }
 
     public function tournaments()

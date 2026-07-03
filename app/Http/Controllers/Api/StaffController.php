@@ -7,19 +7,45 @@ use App\Models\Court;
 use App\Models\Staff;
 use App\Models\StaffRole;
 use App\Models\StaffService;
+use App\Support\BusinessContext;
 use Illuminate\Http\Request;
 
 class StaffController extends Controller
 {
     public function index(Request $request)
     {
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
         $perPage = $this->perPageFromRequest($request);
-        $result = Staff::query()
-            ->with(['role', 'user', 'services.resource'])
-            ->withCount('services')
-            ->orderBy('name')
-            ->paginate($perPage)
-            ->withQueryString();
+        $query = Staff::query()
+            ->with(['role', 'user'])
+            ->orderBy('name');
+
+        if ($context->hasSlug()) {
+            $query->where('business_id', $context->businessId());
+            $query->withCount([
+                'services as services_count' => function ($services) use ($context) {
+                    $services->whereHas('resource', function ($resource) use ($context) {
+                        $resource->where('business_id', $context->businessId());
+                    });
+                },
+            ]);
+            $query->with([
+                'services' => function ($services) use ($context) {
+                    $services->whereHas('resource', function ($resource) use ($context) {
+                        $resource->where('business_id', $context->businessId());
+                    })->with('resource');
+                },
+            ]);
+        } else {
+            $query->with(['services.resource']);
+            $query->withCount('services');
+        }
+
+        $result = $query->paginate($perPage)->withQueryString();
 
         return $this->paginatedResponse($result);
     }
@@ -44,7 +70,15 @@ class StaffController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
         $data = $this->validateStaff($request);
+        if ($context->hasSlug()) {
+            $data['business_id'] = $context->businessId();
+        }
         $staff = Staff::create($data);
 
         return response()->json($this->loadStaff($staff), 201);
@@ -85,13 +119,19 @@ class StaffController extends Controller
         if (!$this->isAdmin($request)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
 
         $data = $request->validate([
-            'resource_id' => ['required', 'integer', 'exists:courts,id'],
+            'resource_id' => ['required', 'integer'],
             'is_primary' => ['sometimes', 'boolean'],
         ]);
 
-        $resource = Court::query()->findOrFail($data['resource_id']);
+        $resourceQuery = Court::query()->whereKey($data['resource_id']);
+        $context->applyTo($resourceQuery);
+        $resource = $resourceQuery->firstOrFail();
         $existing = StaffService::query()
             ->where('staff_id', $staff->id)
             ->where('court_id', $resource->id)
@@ -122,10 +162,18 @@ class StaffController extends Controller
         if (!$this->isAdmin($request)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
+        $resourceQuery = Court::query()->whereKey($resourceId);
+        $context->applyTo($resourceQuery);
+        $resource = $resourceQuery->firstOrFail();
 
         $service = StaffService::query()
             ->where('staff_id', $staff->id)
-            ->where('court_id', $resourceId)
+            ->where('court_id', $resource->id)
             ->first();
 
         if (!$service) {

@@ -30,6 +30,16 @@ class Business extends Model
         'metadata' => 'array',
     ];
 
+    public function courts()
+    {
+        return $this->hasMany(Court::class);
+    }
+
+    public function staff()
+    {
+        return $this->hasMany(Staff::class);
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
