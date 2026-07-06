@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Court;
 use App\Models\Staff;
+use App\Support\BusinessContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -14,7 +15,15 @@ class BookingController extends Controller
 {
     public function index(Request $request)
     {
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
         $q = Booking::with(['court', 'staff'])->where('user_id', $request->user()->id);
+        if ($context->hasSlug()) {
+            $q->where('business_id', $context->businessId());
+        }
         // status=active|completed
         $status = $request->query('status');
         if ($status === 'active') {
@@ -27,6 +36,11 @@ class BookingController extends Controller
 
     public function store(Request $request)
     {
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
         $data = $request->validate([
             'court_id' => 'required|exists:courts,id',
             'staff_id' => 'nullable|integer|exists:staff,id',
@@ -36,14 +50,30 @@ class BookingController extends Controller
             'duration_hours' => 'nullable|integer|min:1|max:12',
         ]);
 
-        $court = Court::find($data['court_id']);
-        if (!$court || $court->status !== 'active') {
+        $courtQuery = Court::query()->whereKey($data['court_id']);
+        if ($context->hasSlug()) {
+            $courtQuery->where('business_id', $context->businessId());
+        }
+        $court = $courtQuery->first();
+        if (!$court) {
+            return response()->json(['message' => 'Selected court does not belong to this business'], 422);
+        }
+        if ($court->status !== 'active') {
             return response()->json(['message' => 'Court is inactive and cannot be booked'], 422);
         }
 
         if (!empty($data['staff_id'])) {
+            $staffQuery = Staff::query()->whereKey($data['staff_id']);
+            if ($context->hasSlug()) {
+                $staffQuery->where('business_id', $context->businessId());
+            }
+            $staff = $staffQuery->first();
+            if (!$staff) {
+                return response()->json(['message' => 'Selected staff does not belong to this business'], 422);
+            }
+
             $staffLinked = Staff::query()
-                ->whereKey($data['staff_id'])
+                ->whereKey($staff->id)
                 ->whereHas('courts', function ($query) use ($data) {
                     $query->whereKey($data['court_id']);
                 })
@@ -79,6 +109,7 @@ class BookingController extends Controller
 
         $booking = Booking::create(array_merge($data, [
             'user_id' => $request->user()->id,
+            'business_id' => $context->hasSlug() ? $context->businessId() : null,
             'staff_id' => $data['staff_id'] ?? null,
             'status' => 'pending',
             'booking_code' => Str::upper(Str::random(6)),
@@ -89,6 +120,15 @@ class BookingController extends Controller
 
     public function show(Request $request, Booking $booking)
     {
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
+        if ($context->hasSlug() && $booking->business_id !== $context->businessId()) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
         if ($booking->user_id !== $request->user()->id && ($request->user()->role ?? null) !== 'admin') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
@@ -98,6 +138,15 @@ class BookingController extends Controller
 
     public function rebook(Request $request, Booking $booking)
     {
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
+        if ($context->hasSlug() && $booking->business_id !== $context->businessId()) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
         if ($booking->user_id !== $request->user()->id && ($request->user()->role ?? null) !== 'admin') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
@@ -113,6 +162,7 @@ class BookingController extends Controller
         $new = Booking::create([
             'user_id' => $request->user()->id,
             'court_id' => $booking->court_id,
+            'business_id' => $booking->business_id,
             'staff_id' => $booking->staff_id,
             'date' => $data['date'],
             'time_slot' => $data['time_slot'],
@@ -126,6 +176,15 @@ class BookingController extends Controller
 
     public function cancel(Request $request, Booking $booking)
     {
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
+        if ($context->hasSlug() && $booking->business_id !== $context->businessId()) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
         if ($booking->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Forbidden'], 403);
         }

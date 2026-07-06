@@ -61,6 +61,10 @@ class CourtController extends Controller
         if ($request->user()->role !== 'admin') {
             return response()->json(['data' => []], 403);
         }
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
         $day = $request->query('day');
         try {
             $date = CarbonImmutable::parse($day ?: CarbonImmutable::now()->toDateString());
@@ -70,9 +74,11 @@ class CourtController extends Controller
         $start = $date->startOfDay();
         $end = $date->endOfDay();
         $items = Booking::with(['court', 'user', 'staff'])
-            ->whereBetween('date', [$start, $end])
-            ->orderBy('time_slot')
-            ->get();
+            ->whereBetween('date', [$start, $end]);
+        if ($context->hasSlug()) {
+            $items->where('business_id', $context->businessId());
+        }
+        $items = $items->orderBy('time_slot')->get();
         return ['data' => $items];
     }
 

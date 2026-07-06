@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Court;
+use App\Models\Booking;
 use App\Models\Business;
 use App\Models\Staff;
 use App\Models\StaffRole;
@@ -330,6 +331,16 @@ class BarbershopDemoSeeder extends Seeder
                     'is_primary' => true,
                 ]
             );
+        }
+
+        if (!empty($serviceModels)) {
+            Booking::query()
+                ->whereNull('business_id')
+                ->whereIn('court_id', array_map(
+                    static fn (Court $court) => $court->id,
+                    array_values($serviceModels),
+                ))
+                ->update(['business_id' => $tresAmigosBusiness?->id]);
         }
     }
 }
