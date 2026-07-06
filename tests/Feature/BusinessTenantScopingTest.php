@@ -152,6 +152,91 @@ class BusinessTenantScopingTest extends TestCase
         $staff->assertJsonFragment(['id' => $legacyStaff->id]);
     }
 
+    public function test_admin_can_assign_staff_to_resource_in_same_business(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $business = $this->createBusiness('barberia-tres-amigos', 'BarberÃ­a Tres Amigos');
+        $role = $this->createRole('barber', 'Barber');
+        $staff = $this->createStaff($business, $role, 'Carlos Barber');
+        $resource = $this->createResource($business, 'Tres Amigos Corte');
+
+        $response = $this->postJson('/api/v1/staff/' . $staff->id . '/services', [
+            'resource_id' => $resource->id,
+        ], [
+            'X-Business-Slug' => $business->slug,
+        ]);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('staff_services', [
+            'staff_id' => $staff->id,
+            'court_id' => $resource->id,
+        ]);
+    }
+
+    public function test_cannot_assign_staff_from_tres_amigos_to_salon_aurora_resource(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $tresAmigos = $this->createBusiness('barberia-tres-amigos', 'BarberÃ­a Tres Amigos');
+        $salonAurora = $this->createBusiness('salon-aurora', 'SalÃ³n Aurora');
+        $role = $this->createRole('barber', 'Barber');
+        $staff = $this->createStaff($tresAmigos, $role, 'Carlos Barber');
+        $resource = $this->createResource($salonAurora, 'Aurora Facial');
+
+        $response = $this->postJson('/api/v1/staff/' . $staff->id . '/services', [
+            'resource_id' => $resource->id,
+        ], [
+            'X-Business-Slug' => $tresAmigos->slug,
+        ]);
+
+        $response->assertNotFound();
+        $this->assertDatabaseMissing('staff_services', [
+            'staff_id' => $staff->id,
+            'court_id' => $resource->id,
+        ]);
+    }
+
+    public function test_cannot_assign_salon_aurora_staff_to_tres_amigos_resource(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $tresAmigos = $this->createBusiness('barberia-tres-amigos', 'BarberÃ­a Tres Amigos');
+        $salonAurora = $this->createBusiness('salon-aurora', 'SalÃ³n Aurora');
+        $role = $this->createRole('barber', 'Barber');
+        $staff = $this->createStaff($salonAurora, $role, 'Alicia Stylist');
+        $resource = $this->createResource($tresAmigos, 'Tres Amigos Corte');
+
+        $response = $this->postJson('/api/v1/staff/' . $staff->id . '/services', [
+            'resource_id' => $resource->id,
+        ], [
+            'X-Business-Slug' => $salonAurora->slug,
+        ]);
+
+        $response->assertNotFound();
+        $this->assertDatabaseMissing('staff_services', [
+            'staff_id' => $staff->id,
+            'court_id' => $resource->id,
+        ]);
+    }
+
+    public function test_no_business_slug_keeps_legacy_compatibility_for_staff_assignment(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $tresAmigos = $this->createBusiness('barberia-tres-amigos', 'BarberÃ­a Tres Amigos');
+        $salonAurora = $this->createBusiness('salon-aurora', 'SalÃ³n Aurora');
+        $role = $this->createRole('barber', 'Barber');
+        $staff = $this->createStaff($tresAmigos, $role, 'Carlos Barber');
+        $resource = $this->createResource($salonAurora, 'Aurora Facial');
+
+        $response = $this->postJson('/api/v1/staff/' . $staff->id . '/services', [
+            'resource_id' => $resource->id,
+        ]);
+
+        $response->assertOk();
+        $this->assertDatabaseHas('staff_services', [
+            'staff_id' => $staff->id,
+            'court_id' => $resource->id,
+        ]);
+    }
+
     private function createBusiness(string $slug, string $name): Business
     {
         return Business::create([

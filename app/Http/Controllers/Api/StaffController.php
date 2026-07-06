@@ -124,6 +124,10 @@ class StaffController extends Controller
             return response()->json(['message' => 'Business not found'], 404);
         }
 
+        if ($context->hasSlug() && $staff->business_id !== $context->businessId()) {
+            return response()->json(['message' => 'Staff not found'], 404);
+        }
+
         $data = $request->validate([
             'resource_id' => ['required', 'integer'],
             'is_primary' => ['sometimes', 'boolean'],
@@ -165,6 +169,10 @@ class StaffController extends Controller
         $context = BusinessContext::fromRequest($request);
         if (!$context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
+        }
+
+        if ($context->hasSlug() && $staff->business_id !== $context->businessId()) {
+            return response()->json(['message' => 'Staff not found'], 404);
         }
 
         $resourceQuery = Court::query()->whereKey($resourceId);
