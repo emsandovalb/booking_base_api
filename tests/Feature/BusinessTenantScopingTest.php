@@ -18,8 +18,8 @@ class BusinessTenantScopingTest extends TestCase
 
     public function test_resources_can_be_filtered_by_business_slug(): void
     {
-        $businessA = $this->createBusiness('barberia-tres-amigos', 'Barbería Tres Amigos');
-        $businessB = $this->createBusiness('salon-aurora', 'Salón Aurora');
+        $businessA = $this->createBusiness('barberia-tres-amigos', 'Barberia Tres Amigos');
+        $businessB = $this->createBusiness('salon-aurora', 'Salon Aurora');
 
         $resourceA = $this->createResource($businessA, 'Tres Amigos Corte');
         $resourceB = $this->createResource($businessB, 'Aurora Facial');
@@ -35,8 +35,8 @@ class BusinessTenantScopingTest extends TestCase
 
     public function test_staff_can_be_filtered_by_business_slug(): void
     {
-        $businessA = $this->createBusiness('barberia-tres-amigos', 'Barbería Tres Amigos');
-        $businessB = $this->createBusiness('salon-aurora', 'Salón Aurora');
+        $businessA = $this->createBusiness('barberia-tres-amigos', 'Barberia Tres Amigos');
+        $businessB = $this->createBusiness('salon-aurora', 'Salon Aurora');
         $role = $this->createRole('barber', 'Barber');
 
         $staffA = $this->createStaff($businessA, $role, 'Carlos Barber');
@@ -60,8 +60,8 @@ class BusinessTenantScopingTest extends TestCase
 
     public function test_resource_staff_lookup_respects_business(): void
     {
-        $businessA = $this->createBusiness('barberia-tres-amigos', 'Barbería Tres Amigos');
-        $businessB = $this->createBusiness('salon-aurora', 'Salón Aurora');
+        $businessA = $this->createBusiness('barberia-tres-amigos', 'Barberia Tres Amigos');
+        $businessB = $this->createBusiness('salon-aurora', 'Salon Aurora');
         $role = $this->createRole('barber', 'Barber');
 
         $resourceA = $this->createResource($businessA, 'Tres Amigos Corte');
@@ -93,7 +93,8 @@ class BusinessTenantScopingTest extends TestCase
     public function test_create_resource_with_business_slug_assigns_business_id(): void
     {
         $admin = $this->actingAsAdmin();
-        $business = $this->createBusiness('barberia-tres-amigos', 'Barbería Tres Amigos');
+        $business = $this->createBusiness('barberia-tres-amigos', 'Barberia Tres Amigos');
+        $this->assignBusinessMembership($admin, $business, 'owner');
 
         $response = $this->postJson('/api/v1/resources', [
             'name' => 'Nuevo Servicio',
@@ -114,7 +115,8 @@ class BusinessTenantScopingTest extends TestCase
     public function test_create_staff_with_business_slug_assigns_business_id(): void
     {
         $admin = $this->actingAsAdmin();
-        $business = $this->createBusiness('barberia-tres-amigos', 'Barbería Tres Amigos');
+        $business = $this->createBusiness('barberia-tres-amigos', 'Barberia Tres Amigos');
+        $this->assignBusinessMembership($admin, $business, 'admin');
         $role = $this->createRole('barber', 'Barber');
 
         $response = $this->postJson('/api/v1/staff', [
@@ -155,7 +157,8 @@ class BusinessTenantScopingTest extends TestCase
     public function test_admin_can_assign_staff_to_resource_in_same_business(): void
     {
         $admin = $this->actingAsAdmin();
-        $business = $this->createBusiness('barberia-tres-amigos', 'BarberÃ­a Tres Amigos');
+        $business = $this->createBusiness('barberia-tres-amigos', 'Barberia Tres Amigos');
+        $this->assignBusinessMembership($admin, $business, 'admin');
         $role = $this->createRole('barber', 'Barber');
         $staff = $this->createStaff($business, $role, 'Carlos Barber');
         $resource = $this->createResource($business, 'Tres Amigos Corte');
@@ -176,8 +179,8 @@ class BusinessTenantScopingTest extends TestCase
     public function test_cannot_assign_staff_from_tres_amigos_to_salon_aurora_resource(): void
     {
         $admin = $this->actingAsAdmin();
-        $tresAmigos = $this->createBusiness('barberia-tres-amigos', 'BarberÃ­a Tres Amigos');
-        $salonAurora = $this->createBusiness('salon-aurora', 'SalÃ³n Aurora');
+        $tresAmigos = $this->createBusiness('barberia-tres-amigos', 'Barberia Tres Amigos');
+        $salonAurora = $this->createBusiness('salon-aurora', 'Salon Aurora');
         $role = $this->createRole('barber', 'Barber');
         $staff = $this->createStaff($tresAmigos, $role, 'Carlos Barber');
         $resource = $this->createResource($salonAurora, 'Aurora Facial');
@@ -188,7 +191,7 @@ class BusinessTenantScopingTest extends TestCase
             'X-Business-Slug' => $tresAmigos->slug,
         ]);
 
-        $response->assertNotFound();
+        $response->assertStatus(403);
         $this->assertDatabaseMissing('staff_services', [
             'staff_id' => $staff->id,
             'court_id' => $resource->id,
@@ -198,8 +201,8 @@ class BusinessTenantScopingTest extends TestCase
     public function test_cannot_assign_salon_aurora_staff_to_tres_amigos_resource(): void
     {
         $admin = $this->actingAsAdmin();
-        $tresAmigos = $this->createBusiness('barberia-tres-amigos', 'BarberÃ­a Tres Amigos');
-        $salonAurora = $this->createBusiness('salon-aurora', 'SalÃ³n Aurora');
+        $tresAmigos = $this->createBusiness('barberia-tres-amigos', 'Barberia Tres Amigos');
+        $salonAurora = $this->createBusiness('salon-aurora', 'Salon Aurora');
         $role = $this->createRole('barber', 'Barber');
         $staff = $this->createStaff($salonAurora, $role, 'Alicia Stylist');
         $resource = $this->createResource($tresAmigos, 'Tres Amigos Corte');
@@ -210,7 +213,7 @@ class BusinessTenantScopingTest extends TestCase
             'X-Business-Slug' => $salonAurora->slug,
         ]);
 
-        $response->assertNotFound();
+        $response->assertStatus(403);
         $this->assertDatabaseMissing('staff_services', [
             'staff_id' => $staff->id,
             'court_id' => $resource->id,
@@ -220,8 +223,8 @@ class BusinessTenantScopingTest extends TestCase
     public function test_no_business_slug_keeps_legacy_compatibility_for_staff_assignment(): void
     {
         $admin = $this->actingAsAdmin();
-        $tresAmigos = $this->createBusiness('barberia-tres-amigos', 'BarberÃ­a Tres Amigos');
-        $salonAurora = $this->createBusiness('salon-aurora', 'SalÃ³n Aurora');
+        $tresAmigos = $this->createBusiness('barberia-tres-amigos', 'Barberia Tres Amigos');
+        $salonAurora = $this->createBusiness('salon-aurora', 'Salon Aurora');
         $role = $this->createRole('barber', 'Barber');
         $staff = $this->createStaff($tresAmigos, $role, 'Carlos Barber');
         $resource = $this->createResource($salonAurora, 'Aurora Facial');
@@ -286,5 +289,19 @@ class BusinessTenantScopingTest extends TestCase
         Sanctum::actingAs($admin);
 
         return $admin;
+    }
+
+    private function assignBusinessMembership(User $user, Business $business, string $role = 'admin'): void
+    {
+        $business->users()->syncWithoutDetaching([
+            $user->id => [
+                'role' => $role,
+                'status' => 'active',
+                'accepted_at' => now(),
+                'metadata' => [
+                    'test' => true,
+                ],
+            ],
+        ]);
     }
 }

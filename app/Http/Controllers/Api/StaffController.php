@@ -66,18 +66,17 @@ class StaffController extends Controller
 
     public function store(Request $request)
     {
-        if (!$this->isAdmin($request)) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-
         $context = BusinessContext::fromRequest($request);
         if (!$context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
+        if ($response = $this->authorizeBusinessAdmin($request, $context)) {
+            return $response;
+        }
 
         $data = $this->validateStaff($request);
         if ($context->hasSlug()) {
-            $data['business_id'] = $context->businessId();
+            $data['business_id'] = $context->currentBusinessId();
         }
         $staff = Staff::create($data);
 
@@ -86,8 +85,12 @@ class StaffController extends Controller
 
     public function update(Request $request, Staff $staff)
     {
-        if (!$this->isAdmin($request)) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+        if ($response = $this->authorizeBusinessAdmin($request, $context)) {
+            return $response;
         }
 
         $data = $this->validateStaff($request, true);
@@ -104,8 +107,12 @@ class StaffController extends Controller
 
     public function deactivate(Request $request, Staff $staff)
     {
-        if (!$this->isAdmin($request)) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+        if ($response = $this->authorizeBusinessAdmin($request, $context)) {
+            return $response;
         }
 
         $staff->is_active = false;
@@ -116,15 +123,15 @@ class StaffController extends Controller
 
     public function attachService(Request $request, Staff $staff)
     {
-        if (!$this->isAdmin($request)) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
         $context = BusinessContext::fromRequest($request);
         if (!$context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
+        if ($response = $this->authorizeBusinessAdmin($request, $context)) {
+            return $response;
+        }
 
-        if ($context->hasSlug() && $staff->business_id !== $context->businessId()) {
+        if ($context->hasSlug() && $staff->business_id !== $context->currentBusinessId()) {
             return response()->json(['message' => 'Staff not found'], 404);
         }
 
@@ -163,15 +170,15 @@ class StaffController extends Controller
 
     public function detachService(Request $request, Staff $staff, int $resourceId)
     {
-        if (!$this->isAdmin($request)) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
         $context = BusinessContext::fromRequest($request);
         if (!$context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
+        if ($response = $this->authorizeBusinessAdmin($request, $context)) {
+            return $response;
+        }
 
-        if ($context->hasSlug() && $staff->business_id !== $context->businessId()) {
+        if ($context->hasSlug() && $staff->business_id !== $context->currentBusinessId()) {
             return response()->json(['message' => 'Staff not found'], 404);
         }
 
@@ -222,6 +229,28 @@ class StaffController extends Controller
     private function isAdmin(Request $request): bool
     {
         return ($request->user()?->role ?? null) === 'admin';
+    }
+
+    private function authorizeBusinessAdmin(Request $request, BusinessContext $context): ?\Illuminate\Http\JsonResponse
+    {
+        if (!$this->isAdmin($request)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        if (!$context->hasSlug()) {
+            return null;
+        }
+
+        $business = $context->currentBusiness();
+        if (!$business) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
+        if (!$context->userCanManageBusiness($request->user(), $business)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        return null;
     }
 
     private function loadStaff(Staff $staff): Staff

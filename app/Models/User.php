@@ -69,4 +69,59 @@ class User extends Authenticatable
             ->withPivot(['role', 'status', 'joined_at'])
             ->withTimestamps();
     }
+
+    public function businesses()
+    {
+        return $this->belongsToMany(Business::class, 'business_user')
+            ->using(BusinessUser::class)
+            ->withPivot(['role', 'status', 'invited_at', 'accepted_at', 'metadata'])
+            ->withTimestamps();
+    }
+
+    public function activeBusinesses()
+    {
+        return $this->businesses()->wherePivot('status', 'active');
+    }
+
+    public function hasBusinessRole($business, array|string $roles): bool
+    {
+        $business = $this->resolveBusiness($business);
+        if (!$business) {
+            return false;
+        }
+
+        $roles = is_array($roles) ? $roles : [$roles];
+
+        return $this->businesses()
+            ->where('businesses.id', $business->id)
+            ->wherePivot('status', 'active')
+            ->wherePivotIn('role', $roles)
+            ->exists();
+    }
+
+    public function belongsToBusiness($business): bool
+    {
+        $business = $this->resolveBusiness($business);
+        if (!$business) {
+            return false;
+        }
+
+        return $this->businesses()
+            ->where('businesses.id', $business->id)
+            ->wherePivot('status', 'active')
+            ->exists();
+    }
+
+    private function resolveBusiness($business): ?Business
+    {
+        if ($business instanceof Business) {
+            return $business;
+        }
+
+        if (is_numeric($business)) {
+            return Business::query()->find((int) $business);
+        }
+
+        return null;
+    }
 }

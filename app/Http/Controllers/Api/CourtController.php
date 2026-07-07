@@ -58,12 +58,12 @@ class CourtController extends Controller
 
     public function reservationsForDay(Request $request)
     {
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['data' => []], 403);
-        }
         $context = BusinessContext::fromRequest($request);
         if (!$context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
+        }
+        if ($response = $this->authorizeBusinessAdmin($request, $context)) {
+            return $response;
         }
         $day = $request->query('day');
         try {
@@ -138,12 +138,12 @@ class CourtController extends Controller
 
     public function store(Request $request)
     {
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
         $context = BusinessContext::fromRequest($request);
         if (!$context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
+        }
+        if ($response = $this->authorizeBusinessAdmin($request, $context)) {
+            return $response;
         }
         $data = $request->validate([
             'name' => 'required',
@@ -167,7 +167,7 @@ class CourtController extends Controller
         }
         $court = Court::create(array_merge($data, [
             'owner_id' => $request->user()->id,
-            'business_id' => $context->businessId(),
+            'business_id' => $context->currentBusinessId(),
             'status' => 'active',
         ]));
         return response()->json($court, 201);
@@ -175,12 +175,12 @@ class CourtController extends Controller
 
     public function mine(Request $request)
     {
-        if ($request->user()->role !== 'admin') {
-            return response()->json(['data' => []]);
-        }
         $context = BusinessContext::fromRequest($request);
         if (!$context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
+        }
+        if (($request->user()->role ?? null) !== 'admin') {
+            return response()->json(['data' => []]);
         }
         $perPage = $this->perPageFromRequest($request);
         $query = Court::with(['staff.role'])
@@ -193,8 +193,12 @@ class CourtController extends Controller
 
     public function update(Request $request, Court $court)
     {
-        if (!$this->canManageCourt($request, $court)) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+        if ($response = $this->authorizeBusinessAdmin($request, $context)) {
+            return $response;
         }
         $data = $request->validate([
             'name' => 'sometimes|required|string',
@@ -224,8 +228,12 @@ class CourtController extends Controller
 
     public function destroy(Request $request, Court $court)
     {
-        if (!$this->canManageCourt($request, $court)) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        $context = BusinessContext::fromRequest($request);
+        if (!$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+        if ($response = $this->authorizeBusinessAdmin($request, $context)) {
+            return $response;
         }
         $court->status = 'inactive';
         $court->save();
@@ -361,9 +369,26 @@ class CourtController extends Controller
         return $user && $user->role === 'admin';
     }
 
-    private function canManageCourt(Request $request, Court $court): bool
+    private function authorizeBusinessAdmin(Request $request, BusinessContext $context): ?\Illuminate\Http\JsonResponse
     {
         $user = $request->user();
-        return $user && $user->role === 'admin';
+        if (!$user || ($user->role ?? null) !== 'admin') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        if (!$context->hasSlug()) {
+            return null;
+        }
+
+        $business = $context->currentBusiness();
+        if (!$business) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
+        if (!$context->userCanManageBusiness($user, $business)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        return null;
     }
 }

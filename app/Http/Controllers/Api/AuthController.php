@@ -57,6 +57,7 @@ class AuthController extends Controller
     {
         $user = $request->user();
         $this->withManagedTeams($user);
+        $user->loadMissing('businesses');
         $user->avatar_url = $user->avatar ? Storage::url($user->avatar) : null;
         return $user;
     }

@@ -45,6 +45,29 @@ class Business extends Model
         return $this->hasMany(Booking::class);
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'business_user')
+            ->using(BusinessUser::class)
+            ->withPivot(['role', 'status', 'invited_at', 'accepted_at', 'metadata'])
+            ->withTimestamps();
+    }
+
+    public function activeUsers()
+    {
+        return $this->users()->wherePivot('status', 'active');
+    }
+
+    public function admins()
+    {
+        return $this->activeUsers()->wherePivotIn('role', ['owner', 'admin']);
+    }
+
+    public function owners()
+    {
+        return $this->activeUsers()->wherePivot('role', 'owner');
+    }
+
     public function scopeActive($query)
     {
         return $query->where('status', 'active');

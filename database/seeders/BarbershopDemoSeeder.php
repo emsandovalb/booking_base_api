@@ -47,6 +47,41 @@ class BarbershopDemoSeeder extends Seeder
         $salonAuroraBusiness = Business::query()
             ->where('slug', 'salon-aurora')
             ->first();
+        $demoAdmin = User::query()->where('email', 'demo@example.com')->first();
+        $salonAdmin = User::updateOrCreate(
+            ['email' => 'salon.aurora.admin@example.com'],
+            [
+                'name' => 'Salon Aurora Demo Admin',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+            ]
+        );
+
+        if ($tresAmigosBusiness && $demoAdmin) {
+            $tresAmigosBusiness->users()->syncWithoutDetaching([
+                $demoAdmin->id => [
+                    'role' => 'owner',
+                    'status' => 'active',
+                    'accepted_at' => now(),
+                    'metadata' => [
+                        'seeded_from' => 'BarbershopDemoSeeder',
+                    ],
+                ],
+            ]);
+        }
+
+        if ($salonAuroraBusiness) {
+            $salonAuroraBusiness->users()->syncWithoutDetaching([
+                $salonAdmin->id => [
+                    'role' => 'admin',
+                    'status' => 'active',
+                    'accepted_at' => now(),
+                    'metadata' => [
+                        'seeded_from' => 'BarbershopDemoSeeder',
+                    ],
+                ],
+            ]);
+        }
 
         $shopAddress = 'Puntarenas, El Roble, Costa Rica';
         $shopPhone = '+506 8888-3366';

@@ -125,11 +125,11 @@ class BookingController extends Controller
             return response()->json(['message' => 'Business not found'], 404);
         }
 
-        if ($context->hasSlug() && $booking->business_id !== $context->businessId()) {
+        if ($context->hasSlug() && $booking->business_id !== $context->currentBusinessId()) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        if ($booking->user_id !== $request->user()->id && ($request->user()->role ?? null) !== 'admin') {
+        if ($booking->user_id !== $request->user()->id && !$this->canAdminOverrideBooking($request, $context)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -143,11 +143,11 @@ class BookingController extends Controller
             return response()->json(['message' => 'Business not found'], 404);
         }
 
-        if ($context->hasSlug() && $booking->business_id !== $context->businessId()) {
+        if ($context->hasSlug() && $booking->business_id !== $context->currentBusinessId()) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
-        if ($booking->user_id !== $request->user()->id && ($request->user()->role ?? null) !== 'admin') {
+        if ($booking->user_id !== $request->user()->id && !$this->canAdminOverrideBooking($request, $context)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
         $data = $request->validate([
@@ -181,12 +181,14 @@ class BookingController extends Controller
             return response()->json(['message' => 'Business not found'], 404);
         }
 
-        if ($context->hasSlug() && $booking->business_id !== $context->businessId()) {
+        if ($context->hasSlug() && $booking->business_id !== $context->currentBusinessId()) {
             return response()->json(['message' => 'Not found'], 404);
         }
 
         if ($booking->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            if (!$this->canAdminOverrideBooking($request, $context)) {
+                return response()->json(['message' => 'Forbidden'], 403);
+            }
         }
         if ($booking->status === 'cancelled') {
             return response()->json($booking->load(['court', 'staff']));
@@ -198,6 +200,25 @@ class BookingController extends Controller
         $booking->status = 'cancelled';
         $booking->save();
         return response()->json($booking->load(['court', 'staff']));
+    }
+
+    private function canAdminOverrideBooking(Request $request, BusinessContext $context): bool
+    {
+        $user = $request->user();
+        if (!$user || ($user->role ?? null) !== 'admin') {
+            return false;
+        }
+
+        if (!$context->hasSlug()) {
+            return true;
+        }
+
+        $business = $context->currentBusiness();
+        if (!$business) {
+            return false;
+        }
+
+        return $context->userCanManageBusiness($user, $business);
     }
 
     private function parseSlotEnd(\Carbon\Carbon $start, string $slot, int $fallbackHours)
