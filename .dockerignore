@@ -1,0 +1,27 @@
+# Without this, `COPY . .` in the Dockerfile bakes the local .env
+# (with dev secrets/keys) and other local-only state straight into the
+# image. Render injects real env vars at runtime — the image must never
+# carry this repo's own .env.
+.env
+.env.*
+!.env.example
+
+.git
+node_modules
+vendor
+
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+!storage/framework/cache/.gitignore
+!storage/framework/sessions/.gitignore
+!storage/framework/views/.gitignore
+!storage/logs/.gitignore
+
+database/database.sqlite
+
+# Screenshots/QA artifacts that sometimes land in the repo root during
+# manual testing — never useful inside the runtime image.
+*.png
+*.log
