@@ -13,45 +13,43 @@ use App\Http\Controllers\Api\ResourceStaffController;
 use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\AppConfigController;
+use App\Http\Controllers\Api\MediaController;
+use App\Models\Booking;
 use App\Models\Court;
 use App\Models\Staff;
 use App\Support\BusinessContext;
 
-Route::bind('resource', function (mixed $value) {
-    $context = BusinessContext::fromRequest(request());
-    if (!$context->isValid()) {
-        return null;
-    }
+/**
+ * Route-model bindings resolve tenant-scoped models. The scoping happens
+ * here, at bind time, not as an after-the-fact ownership check in the
+ * controller: a missing/invalid business context or a record that
+ * doesn't belong to the resolved business must both 404 before any
+ * controller code runs, so no handler can accidentally skip the check.
+ */
+$scopedBinder = function (string $modelClass) {
+    return function (mixed $value) use ($modelClass) {
+        $context = BusinessContext::fromRequest(request());
+        if (!$context->isValid()) {
+            abort(404, 'Business not found');
+        }
 
-    $query = Court::query()->whereKey($value);
-    $context->applyTo($query);
+        $query = $modelClass::query()->whereKey($value);
+        $context->applyTo($query);
+        $record = $query->first();
 
-    return $query->first();
-});
+        if ($record === null) {
+            abort(404, 'Not found');
+        }
 
-Route::bind('court', function (mixed $value) {
-    $context = BusinessContext::fromRequest(request());
-    if (!$context->isValid()) {
-        return null;
-    }
+        return $record;
+    };
+};
 
-    $query = Court::query()->whereKey($value);
-    $context->applyTo($query);
-
-    return $query->first();
-});
-
-Route::bind('staff', function (mixed $value) {
-    $context = BusinessContext::fromRequest(request());
-    if (!$context->isValid()) {
-        return null;
-    }
-
-    $query = Staff::query()->whereKey($value);
-    $context->applyTo($query);
-
-    return $query->first();
-});
+Route::bind('resource', $scopedBinder(Court::class));
+Route::bind('court', $scopedBinder(Court::class));
+Route::bind('staff', $scopedBinder(Staff::class));
+Route::bind('booking', $scopedBinder(Booking::class));
+Route::bind('reservation', $scopedBinder(Booking::class));
 
 /**
  * ALIASES SIN VERSIÓN (compatibilidad con cliente viejo)
@@ -97,7 +95,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/tournaments/{tournament}', [TournamentController::class, 'show']);
     Route::get('/tournaments/{tournament}/teams', [TournamentController::class, 'teams']);
     Route::get('/app-config', [AppConfigController::class, 'showDefault']);
+    Route::get('/media', [MediaController::class, 'show']);
     Route::get('/businesses/{slug}/app-config', [AppConfigController::class, 'showForBusinessSlug']);
+    Route::get('/public/businesses/{slug}/config', [AppConfigController::class, 'showPublicBusinessConfig']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/auth/me', [AuthController::class, 'me']);
@@ -113,6 +113,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/reservations', [ReservationController::class, 'index']);
         Route::post('/reservations', [ReservationController::class, 'store']);
         Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
+        Route::post('/reservations/{reservation}/confirm', [ReservationController::class, 'confirm']);
+        Route::post('/reservations/{reservation}/reject', [ReservationController::class, 'reject']);
         Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
         Route::post('/reservations/{reservation}/rebook', [ReservationController::class, 'rebook']);
 
@@ -125,6 +127,8 @@ Route::prefix('v1')->group(function () {
 
         Route::get('/bookings', [BookingController::class, 'index']);
         Route::post('/bookings', [BookingController::class, 'store']);
+        Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirm']);
+        Route::post('/bookings/{booking}/reject', [BookingController::class, 'reject']);
         Route::post('/bookings/{booking}/rebook', [BookingController::class, 'rebook']);
         Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
 

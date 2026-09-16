@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Court;
 use App\Models\Booking;
 use App\Support\BusinessContext;
+use App\Support\CaseInsensitiveSearch;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -28,8 +30,8 @@ class CourtController extends Controller
         $q->where('status', 'active');
         if ($search = $request->query('q')) {
             $q->where(function ($qq) use ($search) {
-                $qq->where('name', 'like', "%$search%")
-                   ->orWhere('address', 'like', "%$search%");
+                CaseInsensitiveSearch::apply($qq, 'name', $search);
+                CaseInsensitiveSearch::orWhere($qq, 'address', $search);
             });
         }
         if ($cat = $request->query('category')) {
@@ -75,9 +77,7 @@ class CourtController extends Controller
         $end = $date->endOfDay();
         $items = Booking::with(['court', 'user', 'staff'])
             ->whereBetween('date', [$start, $end]);
-        if ($context->hasSlug()) {
-            $items->where('business_id', $context->businessId());
-        }
+        $context->applyTo($items);
         $items = $items->orderBy('time_slot')->get();
         return ['data' => $items];
     }
@@ -105,7 +105,8 @@ class CourtController extends Controller
             return response()->json(['message' => 'invalid date'], 422);
         }
         $dayEnd = (clone $dayStart)->endOfDay();
-        $items = Booking::where('court_id', $court->id)
+        $items = Booking::blocking()
+            ->where('court_id', $court->id)
             ->whereBetween('date', [$dayStart, $dayEnd])
             ->get();
 
@@ -161,13 +162,19 @@ class CourtController extends Controller
             'contact_phone' => 'nullable|string',
             'images' => 'nullable|array|max:10',
             'images.*' => 'string|max:5000',
+            'image' => 'nullable|image|max:5120',
         ]);
-        if (!empty($data['images']) && is_array($data['images'])) {
+        if ($request->hasFile('image')) {
+            $data['images'] = array_values(array_filter([
+                $this->storeUploadedImage($request->file('image')),
+                ...($data['images'] ?? []),
+            ]));
+        } elseif (!empty($data['images']) && is_array($data['images'])) {
             $data['images'] = $this->processAndValidateImages($data['images']);
         }
         $court = Court::create(array_merge($data, [
             'owner_id' => $request->user()->id,
-            'business_id' => $context->currentBusinessId(),
+            'business_id' => $context->businessId(),
             'status' => 'active',
         ]));
         return response()->json($court, 201);
@@ -179,13 +186,11 @@ class CourtController extends Controller
         if (!$context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
-        if (($request->user()->role ?? null) !== 'admin') {
+        if (!$request->user()->canManageBusiness($context->currentBusiness())) {
             return response()->json(['data' => []]);
         }
         $perPage = $this->perPageFromRequest($request);
-        $query = Court::with(['staff.role'])
-            ->where('owner_id', $request->user()->id)
-            ->latest();
+        $query = Court::with(['staff.role'])->latest();
         $context->applyTo($query);
         $result = $query->paginate($perPage)->withQueryString();
         return $this->paginatedResponse($result);
@@ -216,9 +221,16 @@ class CourtController extends Controller
             'contact_phone' => 'sometimes|nullable|string',
             'images' => 'sometimes|array|max:10',
             'images.*' => 'string|max:5000',
+            'image' => 'sometimes|nullable|image|max:5120',
             'status' => 'sometimes|in:active,inactive',
         ]);
-        if (array_key_exists('images', $data) && is_array($data['images'])) {
+        if ($request->hasFile('image')) {
+            $existing = array_values(array_filter((array) $court->images));
+            $data['images'] = array_values(array_filter([
+                $this->storeUploadedImage($request->file('image')),
+                ...$existing,
+            ]));
+        } elseif (array_key_exists('images', $data) && is_array($data['images'])) {
             $data['images'] = $this->processAndValidateImages($data['images']);
         }
         $court->fill($data);
@@ -270,6 +282,18 @@ class CourtController extends Controller
             $stored[] = $this->storeImageString($img, $index);
         }
         return $stored;
+    }
+
+    private function storeUploadedImage(UploadedFile $image): string
+    {
+        $path = $image->store('courts', 'public');
+        if (!$path) {
+            throw ValidationException::withMessages([
+                'image' => ['Unable to store the uploaded image.'],
+            ]);
+        }
+
+        return Storage::url($path);
     }
 
     private function storeImageString(mixed $img, ?int $index = null): string
@@ -366,18 +390,14 @@ class CourtController extends Controller
             return true;
         }
         $user = $request->user();
-        return $user && $user->role === 'admin';
+        return $user && $user->canManageBusiness($court->business);
     }
 
     private function authorizeBusinessAdmin(Request $request, BusinessContext $context): ?\Illuminate\Http\JsonResponse
     {
         $user = $request->user();
-        if (!$user || ($user->role ?? null) !== 'admin') {
+        if (!$user) {
             return response()->json(['message' => 'Forbidden'], 403);
-        }
-
-        if (!$context->hasSlug()) {
-            return null;
         }
 
         $business = $context->currentBusiness();

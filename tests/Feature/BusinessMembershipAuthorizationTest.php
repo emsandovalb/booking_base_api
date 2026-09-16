@@ -130,7 +130,7 @@ class BusinessMembershipAuthorizationTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_no_slug_keeps_legacy_resource_creation(): void
+    public function test_no_slug_is_a_hard_failure_for_resource_creation(): void
     {
         $this->actingAsAdmin();
 
@@ -141,10 +141,9 @@ class BusinessMembershipAuthorizationTest extends TestCase
             'rating' => 4.8,
         ]);
 
-        $response->assertCreated();
-        $this->assertDatabaseHas('courts', [
+        $response->assertStatus(404);
+        $this->assertDatabaseMissing('courts', [
             'name' => 'Legacy Station',
-            'business_id' => null,
         ]);
     }
 
@@ -208,7 +207,7 @@ class BusinessMembershipAuthorizationTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_no_slug_keeps_legacy_staff_creation(): void
+    public function test_no_slug_is_a_hard_failure_for_staff_creation(): void
     {
         $this->actingAsAdmin();
         $role = $this->createRole('barber', 'Barber');
@@ -219,10 +218,9 @@ class BusinessMembershipAuthorizationTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response->assertCreated();
-        $this->assertDatabaseHas('staff', [
+        $response->assertStatus(404);
+        $this->assertDatabaseMissing('staff', [
             'name' => 'Legacy Barber',
-            'business_id' => null,
         ]);
     }
 
@@ -255,7 +253,7 @@ class BusinessMembershipAuthorizationTest extends TestCase
         $response->assertStatus(403);
     }
 
-    public function test_no_slug_keeps_legacy_admin_reservations(): void
+    public function test_no_slug_is_a_hard_failure_for_admin_reservations(): void
     {
         $admin = $this->actingAsAdmin();
         $business = $this->createBusiness('barberia-tres-amigos', 'Barberia Tres Amigos');
@@ -264,8 +262,7 @@ class BusinessMembershipAuthorizationTest extends TestCase
 
         $response = $this->getJson('/api/v1/admin/reservations?day=2026-07-08');
 
-        $response->assertOk();
-        $response->assertJsonCount(1, 'data');
+        $response->assertStatus(404);
     }
 
     private function createBusiness(string $slug, string $name): Business

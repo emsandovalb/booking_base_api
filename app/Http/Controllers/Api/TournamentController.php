@@ -195,11 +195,18 @@ class TournamentController extends Controller
         return $this->isAdmin($request);
     }
 
+    /**
+     * Tournaments/Events/Teams have no business_id — they're platform-wide,
+     * not tenant-scoped (see decision note in EventController::store).
+     * Management is reserved for platform Super Admins, not the legacy
+     * global `role` flag and not per-business membership (there is no
+     * specific business to check membership against).
+     */
     private function isAdmin(Request $request): bool
     {
         $user = $request->user();
 
-        return $user && $user->role === 'admin';
+        return $user !== null && $user->isSuperAdmin();
     }
 
     private function canManageTeam(Request $request, Team $team): bool

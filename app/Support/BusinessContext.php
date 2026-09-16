@@ -30,7 +30,7 @@ class BusinessContext
 
         return new self(
             $slug,
-            Business::query()->where('slug', $slug)->first(),
+            Business::resolveBySlug($slug),
         );
     }
 
@@ -73,22 +73,35 @@ class BusinessContext
         return $this->business;
     }
 
+    /**
+     * A context is only valid when it resolves to a real, active business.
+     * A missing slug is NOT valid here: tenant-scoped data must never be
+     * reachable without an explicit, resolved business context. Callers
+     * that legitimately don't need a business (e.g. auth endpoints) must
+     * check hasSlug() themselves rather than relying on isValid().
+     */
     public function isValid(): bool
     {
-        return !$this->hasSlug() || $this->business !== null;
+        return $this->hasSlug() && $this->business !== null;
     }
 
+    /**
+     * Scopes a query to the resolved business. Fails closed: if this
+     * context does not resolve to a business (no slug, or an unknown
+     * slug), the query is constrained to return nothing rather than
+     * falling back to an unscoped, cross-tenant result set. Callers
+     * should still check isValid() first so they can return a clean
+     * 4xx instead of a silently empty result.
+     */
     public function applyTo(Builder $query, string $column = 'business_id'): Builder
     {
-        if (!$this->hasSlug()) {
-            return $query;
-        }
+        $businessId = $this->currentBusinessId();
 
-        if ($this->currentBusinessId() === null) {
+        if ($businessId === null) {
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->where($column, $this->currentBusinessId());
+        return $query->where($column, $businessId);
     }
 
     public function userCanManageBusiness(User $user, Business $business): bool

@@ -53,10 +53,10 @@ class TournamentEnrollmentTest extends TestCase
         ]);
     }
 
-    public function test_admin_cannot_enroll_as_normal_participant(): void
+    public function test_super_admin_cannot_enroll_as_normal_participant(): void
     {
         $admin = User::factory()->create();
-        $admin->forceFill(['role' => 'admin'])->save();
+        $admin->forceFill(['role' => 'admin', 'is_super_admin' => true])->save();
 
         $team = Team::create([
             'user_id' => $admin->id,

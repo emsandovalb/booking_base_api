@@ -18,9 +18,7 @@ class ResourceStaffController extends Controller
         }
 
         $staff = Staff::query()
-            ->when($context->hasSlug(), function ($query) use ($context) {
-                $query->where('business_id', $context->businessId());
-            })
+            ->where('business_id', $context->businessId())
             ->whereHas('services', function ($query) use ($resource) {
                 $query->where('court_id', $resource->id);
             })

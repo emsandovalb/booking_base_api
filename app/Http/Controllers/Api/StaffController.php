@@ -24,26 +24,21 @@ class StaffController extends Controller
             ->with(['role', 'user'])
             ->orderBy('name');
 
-        if ($context->hasSlug()) {
-            $query->where('business_id', $context->businessId());
-            $query->withCount([
-                'services as services_count' => function ($services) use ($context) {
-                    $services->whereHas('resource', function ($resource) use ($context) {
-                        $resource->where('business_id', $context->businessId());
-                    });
-                },
-            ]);
-            $query->with([
-                'services' => function ($services) use ($context) {
-                    $services->whereHas('resource', function ($resource) use ($context) {
-                        $resource->where('business_id', $context->businessId());
-                    })->with('resource');
-                },
-            ]);
-        } else {
-            $query->with(['services.resource']);
-            $query->withCount('services');
-        }
+        $query->where('business_id', $context->businessId());
+        $query->withCount([
+            'services as services_count' => function ($services) use ($context) {
+                $services->whereHas('resource', function ($resource) use ($context) {
+                    $resource->where('business_id', $context->businessId());
+                });
+            },
+        ]);
+        $query->with([
+            'services' => function ($services) use ($context) {
+                $services->whereHas('resource', function ($resource) use ($context) {
+                    $resource->where('business_id', $context->businessId());
+                })->with('resource');
+            },
+        ]);
 
         $result = $query->paginate($perPage)->withQueryString();
 
@@ -75,9 +70,7 @@ class StaffController extends Controller
         }
 
         $data = $this->validateStaff($request);
-        if ($context->hasSlug()) {
-            $data['business_id'] = $context->currentBusinessId();
-        }
+        $data['business_id'] = $context->businessId();
         $staff = Staff::create($data);
 
         return response()->json($this->loadStaff($staff), 201);
@@ -131,9 +124,8 @@ class StaffController extends Controller
             return $response;
         }
 
-        if ($context->hasSlug() && $staff->business_id !== $context->currentBusinessId()) {
-            return response()->json(['message' => 'Staff not found'], 404);
-        }
+        // $staff is resolved via the scoped route binding, so it is
+        // already guaranteed to belong to the current business context.
 
         $data = $request->validate([
             'resource_id' => ['required', 'integer'],
@@ -178,9 +170,8 @@ class StaffController extends Controller
             return $response;
         }
 
-        if ($context->hasSlug() && $staff->business_id !== $context->currentBusinessId()) {
-            return response()->json(['message' => 'Staff not found'], 404);
-        }
+        // $staff is resolved via the scoped route binding, so it is
+        // already guaranteed to belong to the current business context.
 
         $resourceQuery = Court::query()->whereKey($resourceId);
         $context->applyTo($resourceQuery);
@@ -226,19 +217,11 @@ class StaffController extends Controller
         return $data;
     }
 
-    private function isAdmin(Request $request): bool
-    {
-        return ($request->user()?->role ?? null) === 'admin';
-    }
-
     private function authorizeBusinessAdmin(Request $request, BusinessContext $context): ?\Illuminate\Http\JsonResponse
     {
-        if (!$this->isAdmin($request)) {
+        $user = $request->user();
+        if (!$user) {
             return response()->json(['message' => 'Forbidden'], 403);
-        }
-
-        if (!$context->hasSlug()) {
-            return null;
         }
 
         $business = $context->currentBusiness();
@@ -246,7 +229,7 @@ class StaffController extends Controller
             return response()->json(['message' => 'Business not found'], 404);
         }
 
-        if (!$context->userCanManageBusiness($request->user(), $business)) {
+        if (!$context->userCanManageBusiness($user, $business)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

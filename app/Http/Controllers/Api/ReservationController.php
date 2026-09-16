@@ -31,6 +31,16 @@ class ReservationController extends Controller
         return $this->bookings->show($request, $reservation);
     }
 
+    public function confirm(Request $request, Booking $reservation)
+    {
+        return $this->bookings->confirm($request, $reservation);
+    }
+
+    public function reject(Request $request, Booking $reservation)
+    {
+        return $this->bookings->reject($request, $reservation);
+    }
+
     public function cancel(Request $request, Booking $reservation)
     {
         return $this->bookings->cancel($request, $reservation);

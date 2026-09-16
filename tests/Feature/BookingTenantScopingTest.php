@@ -276,7 +276,7 @@ class BookingTenantScopingTest extends TestCase
         ]);
     }
 
-    public function test_no_business_slug_keeps_legacy_compatibility(): void
+    public function test_no_business_slug_is_a_hard_failure_not_a_legacy_fallback(): void
     {
         $user = $this->actingAsUser();
         $business = $this->createBusiness('barberia-tres-amigos', 'Barbería Tres Amigos');
@@ -288,18 +288,13 @@ class BookingTenantScopingTest extends TestCase
             'time_slot' => '6:00 PM to 7:00 PM',
         ]);
 
-        $response->assertCreated();
-        $response->assertJsonPath('business_id', null);
-
-        $this->assertDatabaseHas('bookings', [
+        $response->assertStatus(404);
+        $this->assertDatabaseMissing('bookings', [
             'user_id' => $user->id,
             'court_id' => $court->id,
-            'business_id' => null,
         ]);
 
         $index = $this->getJson('/api/v1/bookings');
-        $index->assertOk();
-        $index->assertJsonCount(1, 'data');
-        $index->assertJsonPath('data.0.business_id', null);
+        $index->assertStatus(404);
     }
 }

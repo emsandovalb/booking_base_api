@@ -112,6 +112,25 @@ class BusinessTenantScopingTest extends TestCase
         ]);
     }
 
+    public function test_admin_mine_endpoint_returns_business_services_for_owner(): void
+    {
+        $admin = $this->actingAsAdmin();
+        $business = $this->createBusiness('barberia-tres-amigos', 'Barberia Tres Amigos');
+        $this->assignBusinessMembership($admin, $business, 'owner');
+        $serviceA = $this->createResource($business, 'Corte clásico');
+        $serviceB = $this->createResource($business, 'Barba premium');
+        $this->createResource($this->createBusiness('salon-aurora', 'Salon Aurora'), 'Aurora Facial');
+
+        $response = $this->getJson('/api/v1/my/resources', [
+            'X-Business-Slug' => 'barberia-tres-amigos',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonFragment(['id' => $serviceA->id]);
+        $response->assertJsonFragment(['id' => $serviceB->id]);
+        $response->assertJsonMissing(['name' => 'Aurora Facial']);
+    }
+
     public function test_create_staff_with_business_slug_assigns_business_id(): void
     {
         $admin = $this->actingAsAdmin();
@@ -134,7 +153,7 @@ class BusinessTenantScopingTest extends TestCase
         ]);
     }
 
-    public function test_no_business_slug_keeps_compatibility(): void
+    public function test_no_business_slug_is_a_hard_failure_not_an_unscoped_fallback(): void
     {
         $role = $this->createRole('barber', 'Barber');
         $legacyResource = Court::factory()->create();
@@ -148,10 +167,10 @@ class BusinessTenantScopingTest extends TestCase
         $resources = $this->getJson('/api/v1/resources');
         $staff = $this->getJson('/api/v1/staff');
 
-        $resources->assertOk();
-        $staff->assertOk();
-        $resources->assertJsonFragment(['id' => $legacyResource->id]);
-        $staff->assertJsonFragment(['id' => $legacyStaff->id]);
+        $resources->assertStatus(404);
+        $staff->assertStatus(404);
+        $resources->assertJsonMissing(['id' => $legacyResource->id]);
+        $staff->assertJsonMissing(['id' => $legacyStaff->id]);
     }
 
     public function test_admin_can_assign_staff_to_resource_in_same_business(): void
@@ -220,7 +239,7 @@ class BusinessTenantScopingTest extends TestCase
         ]);
     }
 
-    public function test_no_business_slug_keeps_legacy_compatibility_for_staff_assignment(): void
+    public function test_no_business_slug_is_a_hard_failure_for_staff_assignment(): void
     {
         $admin = $this->actingAsAdmin();
         $tresAmigos = $this->createBusiness('barberia-tres-amigos', 'Barberia Tres Amigos');
@@ -233,8 +252,8 @@ class BusinessTenantScopingTest extends TestCase
             'resource_id' => $resource->id,
         ]);
 
-        $response->assertOk();
-        $this->assertDatabaseHas('staff_services', [
+        $response->assertStatus(404);
+        $this->assertDatabaseMissing('staff_services', [
             'staff_id' => $staff->id,
             'court_id' => $resource->id,
         ]);

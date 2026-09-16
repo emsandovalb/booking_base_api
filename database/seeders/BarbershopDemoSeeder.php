@@ -57,9 +57,9 @@ class BarbershopDemoSeeder extends Seeder
             ]
         );
 
-        if ($tresAmigosBusiness && $demoAdmin) {
-            $tresAmigosBusiness->users()->syncWithoutDetaching([
-                $demoAdmin->id => [
+        if ($tresAmigosBusiness) {
+            $memberships = [
+                $owner->id => [
                     'role' => 'owner',
                     'status' => 'active',
                     'accepted_at' => now(),
@@ -67,7 +67,20 @@ class BarbershopDemoSeeder extends Seeder
                         'seeded_from' => 'BarbershopDemoSeeder',
                     ],
                 ],
-            ]);
+            ];
+
+            if ($demoAdmin) {
+                $memberships[$demoAdmin->id] = [
+                    'role' => 'owner',
+                    'status' => 'active',
+                    'accepted_at' => now(),
+                    'metadata' => [
+                        'seeded_from' => 'BarbershopDemoSeeder',
+                    ],
+                ];
+            }
+
+            $tresAmigosBusiness->users()->syncWithoutDetaching($memberships);
         }
 
         if ($salonAuroraBusiness) {
@@ -156,7 +169,7 @@ class BarbershopDemoSeeder extends Seeder
                     'Acabado con productos profesionales',
                 ],
                 'images' => [
-                    'assets/branding/home_hero.png',
+                    'assets/branding/barbershop_hero_bg.png',
                 ],
             ],
             [
@@ -192,7 +205,7 @@ class BarbershopDemoSeeder extends Seeder
                     'Bebida de cortesía sin alcohol',
                 ],
                 'images' => [
-                    'assets/branding/home_hero.png',
+                    'assets/branding/barbershop_hero_bg.png',
                 ],
             ],
             [

@@ -44,7 +44,18 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_super_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * Platform-level flag. Grants access to the Super Admin panel only —
+     * never a substitute for per-business membership on business_user.
+     * Set exclusively via BootstrapAdminSeeder, never through user input.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return (bool) $this->is_super_admin;
     }
 
     public function tournaments()
@@ -81,6 +92,37 @@ class User extends Authenticatable
     public function activeBusinesses()
     {
         return $this->businesses()->wherePivot('status', 'active');
+    }
+
+    public function activeBusinessMembership(?Business $business): ?BusinessUser
+    {
+        if (!$business) {
+            return null;
+        }
+
+        $membership = $this->businesses()
+            ->where('businesses.id', $business->id)
+            ->wherePivot('status', 'active')
+            ->first();
+
+        return $membership?->pivot instanceof BusinessUser ? $membership->pivot : null;
+    }
+
+    /**
+     * Purely membership-based: does this user hold owner/admin on THIS
+     * specific business's business_user pivot? Deliberately does not
+     * consult the legacy `role` column or is_super_admin — a platform
+     * super admin manages the platform via the Super Admin panel, not
+     * individual businesses' operational data.
+     */
+    public function canManageBusiness(?Business $business): bool
+    {
+        $membership = $this->activeBusinessMembership($business);
+        if (!$membership) {
+            return false;
+        }
+
+        return in_array($membership->role, ['owner', 'admin'], true);
     }
 
     public function hasBusinessRole($business, array|string $roles): bool

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Business;
 use App\Models\Team;
 use App\Models\User;
+use App\Support\BusinessContext;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -18,6 +20,11 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
+        $context = BusinessContext::fromRequest($request);
+        if ($context->hasSlug() && !$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -32,11 +39,19 @@ class AuthController extends Controller
 
         $token = $user->createToken('mobile')->plainTextToken;
 
-        return response()->json(['token' => $token, 'user' => $this->withManagedTeams($user)]);
+        return response()->json([
+            'token' => $token,
+            'user' => $this->serializeUser($this->withManagedTeams($user), $context),
+        ]);
     }
 
     public function login(Request $request)
     {
+        $context = BusinessContext::fromRequest($request);
+        if ($context->hasSlug() && !$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
         $data = $request->validate([
             'email' => 'required|email',
             'password' => 'required',
@@ -50,16 +65,26 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken('mobile')->plainTextToken;
-        return response()->json(['token' => $token, 'user' => $this->withManagedTeams($user)]);
+        return response()->json([
+            'token' => $token,
+            'user' => $this->serializeUser($this->withManagedTeams($user), $context),
+        ]);
     }
 
     public function me(Request $request)
     {
         $user = $request->user();
-        $this->withManagedTeams($user);
-        $user->loadMissing('businesses');
-        $user->avatar_url = $user->avatar ? Storage::url($user->avatar) : null;
-        return $user;
+        $context = BusinessContext::fromRequest($request);
+        if ($context->hasSlug() && !$context->isValid()) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+
+        $payload = $this->serializeUser($this->withManagedTeams($user), $context);
+
+        return response()->json([
+            ...$payload,
+            'user' => $payload,
+        ]);
     }
 
     public function logout(Request $request)
@@ -132,6 +157,53 @@ class AuthController extends Controller
         $user->setRelation('teams', $merged);
 
         return $user;
+    }
+
+    private function serializeUser(User $user, ?BusinessContext $context = null): array
+    {
+        $user->loadMissing('businesses');
+        $user->setAttribute('avatar_url', $user->avatar ? Storage::url($user->avatar) : null);
+
+        $business = $this->resolveCurrentBusiness($user, $context);
+        $membership = $business ? $user->activeBusinessMembership($business) : null;
+
+        $user->setAttribute('business', $business ? $this->businessPayload($business) : null);
+        $user->setAttribute('business_id', $business?->id);
+        $user->setAttribute('business_slug', $business?->slug);
+        $user->setAttribute('business_role', $membership?->role);
+        $user->setAttribute('business_status', $membership?->status);
+        $user->setAttribute('can_manage_business', $user->canManageBusiness($business));
+
+        return $user->toArray();
+    }
+
+    private function resolveCurrentBusiness(User $user, ?BusinessContext $context): ?Business
+    {
+        if (!$context?->hasSlug()) {
+            return null;
+        }
+
+        $business = $context->currentBusiness();
+        if (!$business) {
+            return null;
+        }
+
+        $membership = $user->activeBusinessMembership($business);
+        if (!$membership) {
+            return null;
+        }
+
+        return $business;
+    }
+
+    private function businessPayload(Business $business): array
+    {
+        return [
+            'id' => $business->id,
+            'name' => $business->name,
+            'slug' => $business->slug,
+            'status' => $business->status,
+        ];
     }
 
     public function forgotPassword(Request $request)

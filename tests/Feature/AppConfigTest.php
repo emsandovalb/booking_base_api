@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Business;
+use App\Support\BrandingConfig;
+use Database\Seeders\BusinessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -46,6 +48,108 @@ class AppConfigTest extends TestCase
         $response->assertJsonPath('identity.display_name', 'SALÓN AURORA');
         $response->assertJsonPath('colors.primary_gold', '#E6B7A9');
         $response->assertJsonPath('terminology.service', 'tratamiento');
+    }
+
+    public function test_jc_studio_app_config_endpoint_returns_persisted_branding_values(): void
+    {
+        Business::create([
+            'name' => 'JC Studio',
+            'slug' => 'jc-studio',
+            'legal_name' => 'JC Studio Capilar S.A.',
+            'business_type' => 'salon',
+            'status' => 'active',
+            'app_config' => [
+                'identity' => [
+                    'app_name' => 'JC Studio',
+                    'display_name' => 'JC Studio Capilar',
+                    'short_name' => 'JC',
+                    'tagline' => 'Cortes, asesorias y experiencias premium',
+                    'subtitle' => 'Tu estilo, tu experiencia',
+                    'location_short' => 'Zapote',
+                    'location_full' => 'Zapote, Costa Rica',
+                    'rating' => 4.9,
+                    'review_count' => 128,
+                ],
+                'terminology' => [
+                    'business' => 'salón',
+                    'business_profile' => 'perfil de la barbería',
+                    'service' => 'servicio',
+                    'services' => 'servicios',
+                    'appointment' => 'cita',
+                    'appointments' => 'citas',
+                    'staff' => 'barbero',
+                    'staff_plural' => 'barberos',
+                    'staff_display_name' => 'barbero',
+                    'manager' => 'administrador',
+                    'gallery' => 'galería',
+                    'reviews' => 'opiniones',
+                ],
+            ],
+            'contact_config' => [
+                'contact' => [
+                    'phone' => '+506 8888-3366',
+                    'whatsapp' => '+506 8888-3366',
+                    'email' => 'hola@jcstudiocapilar.com',
+                    'instagram' => '@JC Studio capilar',
+                    'website' => 'https://jcstudiocapilar.com',
+                    'facebook' => 'Barbería Tres Amigos',
+                    'address' => 'San Jose , Zapote, Quesada Duran',
+                ],
+            ],
+            'branding_config' => [
+                'assets' => [
+                    'logo_transparent' => 'assets/branding/logo_transparent.png',
+                    'app_icon' => 'assets/branding/app_icon.png',
+                    'hero_background' => 'assets/branding/barbershop_hero_bg.png',
+                    'service_placeholder' => 'assets/branding/service_placeholder.png',
+                    'premium_service_placeholder' => 'assets/branding/service_placeholder_premium.png',
+                    'staff_placeholder' => 'assets/branding/barber_placeholder.png',
+                    'profile_placeholder' => 'assets/branding/profile_placeholder.png',
+                ],
+                'colors' => [
+                    'primary_gold' => '#030708',
+                    'primary_gold_light' => '#FFFFFF',
+                    'primary_gold_dark' => '#9B6F24',
+                    'background' => '#E0E0E0',
+                ],
+                'appearance' => [
+                    'theme_preset' => 'barber_luxury',
+                ],
+            ],
+            'feature_config' => [
+                'features' => config('white_label')['features'],
+            ],
+        ]);
+
+        $response = $this->getJson('/api/v1/businesses/jc-studio/app-config');
+
+        $response->assertOk();
+        $this->assertAppConfigStructure($response->json());
+        $response->assertJsonPath('identity.short_name', 'JC');
+        $response->assertJsonPath('identity.display_name', 'JC Studio Capilar');
+        $response->assertJsonPath('assets.logo_transparent', 'assets/branding/logo_transparent.png');
+        $response->assertJsonPath('assets.hero_background', 'assets/branding/barbershop_hero_bg.png');
+        $response->assertJsonPath('terminology.staff_display_name', 'barbero');
+        $response->assertJsonPath('appearance.theme_preset', 'barber_luxury');
+        $response->assertJsonPath('appearance.theme_mode', 'dark');
+        $response->assertJsonPath('contact.facebook', 'Barbería Tres Amigos');
+        $response->assertJsonPath('colors.primary_gold', '#030708');
+        $response->assertJsonPath('colors.primary', '#030708');
+        $this->assertMatchesRegularExpression('/^#[0-9A-F]{6}$/', strtoupper($response->json('colors.input_background')));
+    }
+
+    public function test_business_seeder_writes_safe_jc_studio_branding_values(): void
+    {
+        $this->seed(BusinessSeeder::class);
+
+        $business = Business::query()
+            ->where('slug', 'jc-studio')
+            ->firstOrFail();
+
+        $this->assertSame('', data_get($business->branding_config, 'assets.logo_transparent'));
+        $this->assertSame('', data_get($business->branding_config, 'assets.hero_background'));
+        $this->assertSame('estilista', data_get($business->app_config, 'terminology.staff_display_name'));
+        $this->assertSame('JC Studio Capilar', data_get($business->contact_config, 'contact.facebook'));
     }
 
     public function test_business_slug_configs_have_distinct_branding_and_copy(): void
@@ -92,6 +196,65 @@ class AppConfigTest extends TestCase
         $response = $this->getJson('/api/v1/businesses/inactive-shop/app-config');
 
         $response->assertNotFound();
+    }
+
+    public function test_safe_theme_generation_returns_readable_button_text_and_legacy_aliases(): void
+    {
+        $colors = BrandingConfig::normalizeColors([
+            'primary_gold' => '#F7E6D5',
+            'primary_gold_light' => '#FFF4EC',
+            'primary_gold_dark' => '#D8B8A6',
+        ]);
+
+        $appearance = BrandingConfig::normalizeAppearance([
+            'theme_preset' => 'not-a-real-preset',
+        ]);
+
+        $this->assertSame('#F7E6D5', $colors['primary']);
+        $this->assertSame('#FFF4EC', $colors['primary_light']);
+        $this->assertSame('#D8B8A6', $colors['primary_dark']);
+        $this->assertSame('generic_dark', $appearance['theme_preset']);
+        $this->assertSame('dark', $appearance['theme_mode']);
+    }
+
+    public function test_branding_input_derives_required_palette_fields_from_simple_inputs(): void
+    {
+        $branding = BrandingConfig::normalizeBrandingInput([
+            'identity' => [
+                'app_name' => 'JC Studio',
+                'display_name' => 'JC STUDIO',
+                'short_name' => 'JC',
+            ],
+            'colors' => [
+                'primary' => '#F6F1EC',
+                'accent' => '#A86E63',
+                'background' => '#FAF8F5',
+            ],
+            'appearance' => [
+                'theme_preset' => 'elegant_light',
+            ],
+        ], 'salon', 'jc-studio');
+
+        $this->assertSame('elegant_light', $branding['appearance']['theme_preset']);
+        $this->assertSame('light', $branding['appearance']['theme_mode']);
+        $this->assertSame('#F6F1EC', $branding['colors']['primary']);
+        $this->assertSame('#A86E63', $branding['colors']['accent']);
+        $this->assertMatchesRegularExpression('/^#[0-9A-F]{6}$/', $branding['colors']['input_background']);
+        $this->assertMatchesRegularExpression('/^#[0-9A-F]{6}$/', $branding['colors']['placeholder']);
+        $this->assertMatchesRegularExpression('/^#[0-9A-F]{6}$/', $branding['colors']['disabled_text']);
+    }
+
+    public function test_tres_amigos_resolve_retains_exact_brand_assets(): void
+    {
+        $business = $this->createTresAmigosBusiness();
+
+        $branding = BrandingConfig::resolveForBusiness($business);
+
+        $this->assertSame('barberia-tres-amigos', $branding['slug']);
+        $this->assertSame('BARBERÍA TRES AMIGOS', $branding['identity']['display_name']);
+        $this->assertSame('assets/branding/logo_transparent.png', $branding['assets']['logo_transparent']);
+        $this->assertSame('assets/branding/barbershop_hero_bg.png', $branding['assets']['hero_background']);
+        $this->assertSame('barbero', $branding['terminology']['staff']);
     }
 
     private function createTresAmigosBusiness(string $status = 'active'): Business

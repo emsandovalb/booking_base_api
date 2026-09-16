@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Booking;
+use App\Models\Business;
 use App\Models\Court;
 use App\Models\User;
 use Carbon\Carbon;
@@ -20,16 +21,32 @@ class BookingDurationTest extends TestCase
         $this->artisan('migrate');
     }
 
-    protected function authHeaders(User $user): array
+    protected function authHeaders(User $user, ?Business $business = null): array
     {
         $token = $user->createToken('test')->plainTextToken;
-        return ['Authorization' => 'Bearer ' . $token, 'Accept' => 'application/json'];
+        $headers = ['Authorization' => 'Bearer ' . $token, 'Accept' => 'application/json'];
+        if ($business) {
+            $headers['X-Business-Slug'] = $business->slug;
+        }
+
+        return $headers;
+    }
+
+    private function createBusiness(): Business
+    {
+        return Business::create([
+            'name' => 'Barberia Tres Amigos',
+            'slug' => 'barberia-tres-amigos-' . uniqid(),
+            'business_type' => 'barbershop',
+            'status' => 'active',
+        ]);
     }
 
     public function test_store_persists_explicit_duration_hours(): void
     {
         $user = User::factory()->create();
-        $court = Court::factory()->create();
+        $business = $this->createBusiness();
+        $court = Court::factory()->create(['business_id' => $business->id]);
 
         $payload = [
             'court_id' => $court->id,
@@ -38,7 +55,7 @@ class BookingDurationTest extends TestCase
             'duration_hours' => 2,
         ];
 
-        $response = $this->postJson('/api/v1/bookings', $payload, $this->authHeaders($user));
+        $response = $this->postJson('/api/v1/bookings', $payload, $this->authHeaders($user, $business));
         $response->assertCreated();
         $response->assertJsonPath('duration_hours', 2);
 
@@ -52,7 +69,8 @@ class BookingDurationTest extends TestCase
     public function test_store_defaults_duration_hours_to_one_when_missing(): void
     {
         $user = User::factory()->create();
-        $court = Court::factory()->create();
+        $business = $this->createBusiness();
+        $court = Court::factory()->create(['business_id' => $business->id]);
 
         $payload = [
             'court_id' => $court->id,
@@ -60,7 +78,7 @@ class BookingDurationTest extends TestCase
             'time_slot' => '6:00 PM',
         ];
 
-        $response = $this->postJson('/api/v1/bookings', $payload, $this->authHeaders($user));
+        $response = $this->postJson('/api/v1/bookings', $payload, $this->authHeaders($user, $business));
         $response->assertCreated();
         $response->assertJsonPath('duration_hours', 1);
 
@@ -74,12 +92,14 @@ class BookingDurationTest extends TestCase
     public function test_overlap_uses_each_existing_bookings_duration(): void
     {
         $user = User::factory()->create();
-        $court = Court::factory()->create();
+        $business = $this->createBusiness();
+        $court = Court::factory()->create(['business_id' => $business->id]);
 
         // Existing booking from 18:00 with duration 2h (18-20)
         $existing = Booking::create([
             'user_id' => $user->id,
             'court_id' => $court->id,
+            'business_id' => $business->id,
             'date' => Carbon::parse('2026-01-01 18:00:00'),
             'time_slot' => '6:00 PM',
             'duration_hours' => 2,
@@ -98,19 +118,21 @@ class BookingDurationTest extends TestCase
             'duration_hours' => 1,
         ];
 
-        $response = $this->postJson('/api/v1/bookings', $payload, $this->authHeaders($user));
+        $response = $this->postJson('/api/v1/bookings', $payload, $this->authHeaders($user, $business));
         $response->assertStatus(422);
     }
 
     public function test_overlap_fallback_for_legacy_null_duration(): void
     {
         $user = User::factory()->create();
-        $court = Court::factory()->create();
+        $business = $this->createBusiness();
+        $court = Court::factory()->create(['business_id' => $business->id]);
 
         // Simulate legacy booking with null duration_hours (treated as 1h)
         $legacy = Booking::create([
             'user_id' => $user->id,
             'court_id' => $court->id,
+            'business_id' => $business->id,
             'date' => Carbon::parse('2026-01-01 18:00:00'),
             'time_slot' => '6:00 PM',
             'duration_hours' => null,
@@ -129,18 +151,20 @@ class BookingDurationTest extends TestCase
             'duration_hours' => 1,
         ];
 
-        $response = $this->postJson('/api/v1/bookings', $payload, $this->authHeaders($user));
+        $response = $this->postJson('/api/v1/bookings', $payload, $this->authHeaders($user, $business));
         $response->assertStatus(422);
     }
 
     public function test_rebook_preserves_duration_hours(): void
     {
         $user = User::factory()->create();
-        $court = Court::factory()->create();
+        $business = $this->createBusiness();
+        $court = Court::factory()->create(['business_id' => $business->id]);
 
         $original = Booking::create([
             'user_id' => $user->id,
             'court_id' => $court->id,
+            'business_id' => $business->id,
             'date' => Carbon::now()->addDays(2),
             'time_slot' => '6:00 PM',
             'duration_hours' => 3,
@@ -159,7 +183,7 @@ class BookingDurationTest extends TestCase
         $response = $this->postJson(
             '/api/v1/bookings/' . $original->id . '/rebook',
             $payload,
-            $this->authHeaders($user)
+            $this->authHeaders($user, $business)
         );
 
         $response->assertCreated();

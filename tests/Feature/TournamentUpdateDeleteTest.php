@@ -15,7 +15,7 @@ class TournamentUpdateDeleteTest extends TestCase
 
     private function makeAdmin(User $user): User
     {
-        $user->forceFill(['role' => 'admin'])->save();
+        $user->forceFill(['role' => 'admin', 'is_super_admin' => true])->save();
 
         return $user;
     }

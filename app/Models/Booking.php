@@ -9,6 +9,12 @@ class Booking extends Model
 {
     use HasFactory;
 
+    /**
+     * Only reservations that are still awaiting service or confirmed reserve a slot.
+     * Terminal states (for example cancelled and rejected) must immediately free it.
+     */
+    public const BLOCKING_STATUSES = ['pending', 'confirmed'];
+
     protected $fillable = [
         'user_id',
         'court_id',
@@ -24,11 +30,31 @@ class Booking extends Model
 
     protected $casts = [
         'date' => 'datetime',
+        'occupied_slot_at' => 'datetime',
+        'staff_id' => 'integer',
         'duration_hours' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        // Keeps occupied_slot_at (the DB-level double-booking backstop —
+        // see the migration) in sync automatically on every save, so no
+        // caller has to remember to maintain it by hand: a booking
+        // occupies its slot only while in a blocking status.
+        static::saving(function (Booking $booking) {
+            $booking->occupied_slot_at = in_array($booking->status, self::BLOCKING_STATUSES, true)
+                ? $booking->date
+                : null;
+        });
+    }
 
     public function user() { return $this->belongsTo(User::class); }
     public function court() { return $this->belongsTo(Court::class); }
     public function business() { return $this->belongsTo(Business::class); }
     public function staff() { return $this->belongsTo(Staff::class); }
+
+    public function scopeBlocking($query)
+    {
+        return $query->whereIn('status', self::BLOCKING_STATUSES);
+    }
 }

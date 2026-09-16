@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Business;
 use App\Models\Court;
 use App\Models\User;
 use Carbon\Carbon;
@@ -29,16 +30,45 @@ class CourtLifecycleTest extends TestCase
         return $user;
     }
 
+    private function createBusiness(string $slug = 'barberia-tres-amigos', string $name = 'Barberia Tres Amigos'): Business
+    {
+        return Business::create([
+            'name' => $name,
+            'slug' => $slug,
+            'business_type' => 'barbershop',
+            'status' => 'active',
+        ]);
+    }
+
+    private function assignMembership(User $user, Business $business, string $role = 'owner'): void
+    {
+        $business->users()->syncWithoutDetaching([
+            $user->id => [
+                'role' => $role,
+                'status' => 'active',
+                'accepted_at' => now(),
+            ],
+        ]);
+    }
+
+    private function headers(Business $business): array
+    {
+        return ['X-Business-Slug' => $business->slug];
+    }
+
     public function test_delete_deactivates_court_and_keeps_it_for_admin()
     {
         $admin = $this->actingAsAdmin();
+        $business = $this->createBusiness();
+        $this->assignMembership($admin, $business, 'owner');
 
         $court = Court::factory()->create([
+            'business_id' => $business->id,
             'owner_id' => $admin->id,
             'status' => 'active',
         ]);
 
-        $response = $this->deleteJson('/api/v1/courts/' . $court->id);
+        $response = $this->deleteJson('/api/v1/courts/' . $court->id, [], $this->headers($business));
         $response->assertOk();
         $response->assertJsonPath('court.status', 'inactive');
 
@@ -49,7 +79,7 @@ class CourtLifecycleTest extends TestCase
 
         // Inactive courts are not visible in public listing
         Sanctum::actingAs($this->actingAsUser());
-        $list = $this->getJson('/api/v1/courts');
+        $list = $this->getJson('/api/v1/courts', $this->headers($business));
         $list->assertOk();
         $this->assertEmpty(
             collect($list->json('data'))->where('id', $court->id)
@@ -57,7 +87,7 @@ class CourtLifecycleTest extends TestCase
 
         // But owner admin still sees it in /my/grounds
         Sanctum::actingAs($admin);
-        $mine = $this->getJson('/api/v1/my/grounds');
+        $mine = $this->getJson('/api/v1/my/grounds', $this->headers($business));
         $mine->assertOk();
         $this->assertNotEmpty(
             collect($mine->json('data'))->where('id', $court->id)
@@ -67,8 +97,10 @@ class CourtLifecycleTest extends TestCase
     public function test_inactive_court_cannot_be_booked()
     {
         $user = $this->actingAsUser();
+        $business = $this->createBusiness();
 
         $court = Court::factory()->create([
+            'business_id' => $business->id,
             'status' => 'inactive',
         ]);
 
@@ -78,7 +110,7 @@ class CourtLifecycleTest extends TestCase
             'time_slot' => '6:00 PM to 7:00 PM',
         ];
 
-        $response = $this->postJson('/api/v1/bookings', $payload);
+        $response = $this->postJson('/api/v1/bookings', $payload, $this->headers($business));
         $response->assertStatus(422);
         $response->assertJsonPath('message', 'Court is inactive and cannot be booked');
     }
@@ -86,8 +118,10 @@ class CourtLifecycleTest extends TestCase
     public function test_rebook_fails_when_court_is_inactive()
     {
         $user = $this->actingAsUser();
+        $business = $this->createBusiness();
 
         $court = Court::factory()->create([
+            'business_id' => $business->id,
             'status' => 'active',
         ]);
 
@@ -95,14 +129,15 @@ class CourtLifecycleTest extends TestCase
             'court_id' => $court->id,
             'date' => Carbon::now()->addDay()->toIso8601String(),
             'time_slot' => '6:00 PM',
-        ]);
+        ], $this->headers($business));
         $bookingResponse->assertCreated();
         $bookingId = $bookingResponse->json('id');
 
         // Deactivate court via DELETE
         $admin = User::factory()->create(['role' => 'admin']);
+        $this->assignMembership($admin, $business, 'owner');
         Sanctum::actingAs($admin);
-        $this->deleteJson('/api/v1/courts/' . $court->id)->assertOk();
+        $this->deleteJson('/api/v1/courts/' . $court->id, [], $this->headers($business))->assertOk();
 
         // Back as booking owner
         Sanctum::actingAs($user);
@@ -111,7 +146,7 @@ class CourtLifecycleTest extends TestCase
             'time_slot' => '7:00 PM',
         ];
 
-        $rebook = $this->postJson('/api/v1/bookings/' . $bookingId . '/rebook', $rebookPayload);
+        $rebook = $this->postJson('/api/v1/bookings/' . $bookingId . '/rebook', $rebookPayload, $this->headers($business));
         $rebook->assertStatus(422);
         $rebook->assertJsonPath('message', 'Court is inactive and cannot be rebooked');
     }

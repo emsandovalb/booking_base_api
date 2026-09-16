@@ -20,6 +20,15 @@ class EventController extends Controller
 
     public function store(Request $request)
     {
+        // Events have no business_id — they're platform-wide, not
+        // tenant-scoped (see decision note below). There's no specific
+        // business to check membership against, so this is gated by the
+        // platform Super Admin flag, not canManageBusiness().
+        $user = $request->user();
+        if (!$user || !$user->isSuperAdmin()) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $data = $request->validate([
             'title' => 'required',
             'description' => 'nullable',
