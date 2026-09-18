@@ -20,4 +20,4 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction \
 
 # Render sets $PORT at runtime; migrate on boot so a fresh Postgres
 # database is ready before the server starts accepting requests.
-CMD sh -c "php artisan migrate --force && php artisan serve --host 0.0.0.0 --port ${PORT:-8000}"
+CMD sh -c "php artisan migrate --force && php artisan db:seed --class=BusinessSeeder --force && php artisan serve --host 0.0.0.0 --port ${PORT:-8000}"
