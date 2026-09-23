@@ -14,7 +14,9 @@ use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\AppConfigController;
 use App\Http\Controllers\Api\MediaController;
+use App\Http\Controllers\Api\BusinessClosureController;
 use App\Models\Booking;
+use App\Models\BusinessClosure;
 use App\Models\Court;
 use App\Models\Staff;
 use App\Support\BusinessContext;
@@ -50,6 +52,7 @@ Route::bind('court', $scopedBinder(Court::class));
 Route::bind('staff', $scopedBinder(Staff::class));
 Route::bind('booking', $scopedBinder(Booking::class));
 Route::bind('reservation', $scopedBinder(Booking::class));
+Route::bind('closure', $scopedBinder(BusinessClosure::class));
 
 /**
  * ALIASES SIN VERSIÓN (compatibilidad con cliente viejo)
@@ -126,6 +129,10 @@ Route::prefix('v1')->group(function () {
         Route::patch('/staff/{staff}/deactivate', [StaffController::class, 'deactivate']);
         Route::post('/staff/{staff}/services', [StaffController::class, 'attachService']);
         Route::delete('/staff/{staff}/services/{resourceId}', [StaffController::class, 'detachService']);
+
+        Route::get('/closures', [BusinessClosureController::class, 'index']);
+        Route::post('/closures', [BusinessClosureController::class, 'store']);
+        Route::delete('/closures/{closure}', [BusinessClosureController::class, 'destroy']);
 
         Route::get('/bookings', [BookingController::class, 'index']);
         Route::post('/bookings', [BookingController::class, 'store'])->middleware('throttle:booking-write');

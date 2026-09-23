@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Booking;
+use App\Models\BusinessClosure;
 use App\Models\Court;
 use App\Models\Staff;
 use Carbon\CarbonImmutable;
@@ -45,6 +46,15 @@ class BookingAvailabilityService
         $daySchedule = $schedule[strtolower($day->englishDayOfWeek)] ?? null;
 
         if (is_array($daySchedule) && ! ($daySchedule['is_open'] ?? false)) {
+            return [];
+        }
+
+        // A closure (holiday closing the whole business, or a single
+        // staff member's day off) makes the whole day unbookable — checked
+        // before generating any slots, so it applies identically to what
+        // the client is shown and to what booking creation validates
+        // against (both call this same method).
+        if (BusinessClosure::query()->affecting($service->business_id, $day->toDateString(), $staff?->id)->exists()) {
             return [];
         }
 
