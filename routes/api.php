@@ -55,14 +55,14 @@ Route::bind('reservation', $scopedBinder(Booking::class));
  * ALIASES SIN VERSIÓN (compatibilidad con cliente viejo)
  * Si tu app llama /api/login (sin /auth), deja también ese alias exacto.
  */
-Route::post('/auth/login', [AuthController::class, 'login']);
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/password/forgot', [AuthController::class, 'forgotPassword']);
-Route::post('/auth/password/reset', [AuthController::class, 'resetPassword']);
+Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
+Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:register');
+Route::post('/auth/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:password-forgot');
+Route::post('/auth/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:password-reset');
 Route::get('/translations', [TranslationController::class, 'index']);
 
 // Si tu app usa exactamente /api/login:
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
 // (Opcional) Lecturas públicas que tu app ya consuma sin versión:
 Route::apiResource('/public/courts', CourtController::class)->only(['index', 'show'])->names('public.courts');
@@ -86,10 +86,10 @@ Route::prefix('v1')->group(function () {
     Route::get('/staff/{staff}', [StaffController::class, 'show']);
 
     // Auth
-    Route::post('/auth/register', [AuthController::class, 'register']);
-    Route::post('/auth/login', [AuthController::class, 'login']);
-    Route::post('/auth/password/forgot', [AuthController::class, 'forgotPassword']);
-    Route::post('/auth/password/reset', [AuthController::class, 'resetPassword']);
+    Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:register');
+    Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('/auth/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:password-forgot');
+    Route::post('/auth/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:password-reset');
 
     Route::get('/tournaments', [TournamentController::class, 'index']);
     Route::get('/tournaments/{tournament}', [TournamentController::class, 'show']);
@@ -111,12 +111,14 @@ Route::prefix('v1')->group(function () {
         Route::delete('/resources/{resource}', [ResourceController::class, 'destroy']);
 
         Route::get('/reservations', [ReservationController::class, 'index']);
-        Route::post('/reservations', [ReservationController::class, 'store']);
+        Route::post('/reservations', [ReservationController::class, 'store'])->middleware('throttle:booking-write');
         Route::get('/reservations/{reservation}', [ReservationController::class, 'show']);
         Route::post('/reservations/{reservation}/confirm', [ReservationController::class, 'confirm']);
         Route::post('/reservations/{reservation}/reject', [ReservationController::class, 'reject']);
+        Route::post('/reservations/{reservation}/complete', [ReservationController::class, 'complete']);
         Route::post('/reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
-        Route::post('/reservations/{reservation}/rebook', [ReservationController::class, 'rebook']);
+        Route::post('/reservations/{reservation}/rebook', [ReservationController::class, 'rebook'])->middleware('throttle:booking-write');
+        Route::patch('/reservations/{reservation}/payment-status', [ReservationController::class, 'markPaid']);
 
         Route::post('/staff', [StaffController::class, 'store']);
         Route::match(['put', 'patch'], '/staff/{staff}', [StaffController::class, 'update']);
@@ -126,11 +128,13 @@ Route::prefix('v1')->group(function () {
         Route::delete('/staff/{staff}/services/{resourceId}', [StaffController::class, 'detachService']);
 
         Route::get('/bookings', [BookingController::class, 'index']);
-        Route::post('/bookings', [BookingController::class, 'store']);
+        Route::post('/bookings', [BookingController::class, 'store'])->middleware('throttle:booking-write');
         Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirm']);
         Route::post('/bookings/{booking}/reject', [BookingController::class, 'reject']);
-        Route::post('/bookings/{booking}/rebook', [BookingController::class, 'rebook']);
+        Route::post('/bookings/{booking}/complete', [BookingController::class, 'complete']);
+        Route::post('/bookings/{booking}/rebook', [BookingController::class, 'rebook'])->middleware('throttle:booking-write');
         Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
+        Route::patch('/bookings/{booking}/payment-status', [BookingController::class, 'markPaid']);
 
         // Admin only
         Route::get('/my/grounds', [CourtController::class, 'mine']);

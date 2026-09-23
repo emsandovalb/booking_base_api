@@ -56,7 +56,7 @@ class BookingAvailabilityStatusTest extends TestCase
 
         $this->postJson('/api/v1/bookings', $this->bookingPayload($court, $start), $headers)
             ->assertStatus(422)
-            ->assertJsonPath('message', 'Time slot already booked');
+            ->assertJsonPath('message', 'Time slot is no longer available');
     }
 
     public function test_a_cancelled_booking_allows_another_booking_in_the_same_slot(): void
