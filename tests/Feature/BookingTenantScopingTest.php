@@ -107,8 +107,8 @@ class BookingTenantScopingTest extends TestCase
 
         $response = $this->postJson('/api/v1/bookings', [
             'court_id' => $court->id,
-            'date' => Carbon::now()->addDay()->startOfDay()->toIso8601String(),
-            'time_slot' => '9:00 AM to 10:00 AM',
+            'date' => Carbon::now()->addDay()->toIso8601String(),
+            'time_slot' => '6:00 PM to 7:00 PM',
         ], [
             'X-Business-Slug' => $business->slug,
         ]);
@@ -139,7 +139,7 @@ class BookingTenantScopingTest extends TestCase
         ]);
 
         $response->assertStatus(422);
-        $response->assertJsonPath('message', 'Selected service does not belong to this business');
+        $response->assertJsonPath('message', 'Selected court does not belong to this business');
     }
 
     public function test_booking_creation_fails_if_staff_belongs_to_another_business(): void
@@ -160,7 +160,7 @@ class BookingTenantScopingTest extends TestCase
         ]);
 
         $response->assertStatus(422);
-        $response->assertJsonPath('message', 'Staff is not linked to this court');
+        $response->assertJsonPath('message', 'Selected staff does not belong to this business');
     }
 
     public function test_booking_index_with_tres_amigos_slug_only_returns_tres_amigos_bookings(): void
@@ -261,8 +261,8 @@ class BookingTenantScopingTest extends TestCase
         $booking = $this->createBookingForUser($user, $court, $business);
 
         $response = $this->postJson('/api/v1/bookings/' . $booking->id . '/rebook', [
-            'date' => Carbon::now()->addDays(2)->startOfDay()->toIso8601String(),
-            'time_slot' => '10:00 AM to 11:00 AM',
+            'date' => Carbon::now()->addDays(2)->toIso8601String(),
+            'time_slot' => '7:00 PM to 8:00 PM',
         ], [
             'X-Business-Slug' => $business->slug,
         ]);

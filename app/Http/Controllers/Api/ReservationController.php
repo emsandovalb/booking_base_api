@@ -41,11 +41,6 @@ class ReservationController extends Controller
         return $this->bookings->reject($request, $reservation);
     }
 
-    public function complete(Request $request, Booking $reservation)
-    {
-        return $this->bookings->complete($request, $reservation);
-    }
-
     public function cancel(Request $request, Booking $reservation)
     {
         return $this->bookings->cancel($request, $reservation);
@@ -54,10 +49,5 @@ class ReservationController extends Controller
     public function rebook(Request $request, Booking $reservation)
     {
         return $this->bookings->rebook($request, $reservation);
-    }
-
-    public function markPaid(Request $request, Booking $reservation)
-    {
-        return $this->bookings->markPaid($request, $reservation);
     }
 }

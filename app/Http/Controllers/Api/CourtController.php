@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Court;
 use App\Models\Booking;
-use App\Models\Staff;
-use App\Services\BookingAvailabilityService;
 use App\Support\BusinessContext;
 use App\Support\CaseInsensitiveSearch;
 use Illuminate\Http\Request;
@@ -19,10 +17,6 @@ use Carbon\CarbonImmutable;
 
 class CourtController extends Controller
 {
-    public function __construct(private readonly BookingAvailabilityService $availability)
-    {
-    }
-
     public function index(Request $request)
     {
         $context = BusinessContext::fromRequest($request);
@@ -110,29 +104,6 @@ class CourtController extends Controller
         } catch (\Throwable $e) {
             return response()->json(['message' => 'invalid date'], 422);
         }
-        $context = BusinessContext::fromRequest($request);
-        $staffId = $request->query('staff_id');
-        if ($staffId !== null) {
-            if (!$context->isValid()) {
-                return response()->json(['message' => 'Business not found'], 404);
-            }
-            $staffQuery = Staff::query()->whereKey($staffId)->where('is_active', true);
-            $context->applyTo($staffQuery);
-            $staff = $staffQuery
-                ->whereHas('courts', fn ($query) => $query->whereKey($court->id))
-                ->first();
-            if (!$staff) {
-                return response()->json(['message' => 'Selected professional cannot perform this service'], 422);
-            }
-
-            $slots = $this->availability->slots($court, $staff, $dayStart->toDateString());
-            return response()->json([
-                'slots' => $slots,
-                'booked' => [],
-            ]);
-        }
-
-        // Legacy response for old clients. New clients must send staff_id and use slots.
         $dayEnd = (clone $dayStart)->endOfDay();
         $items = Booking::blocking()
             ->where('court_id', $court->id)
