@@ -221,6 +221,13 @@ class BookingController extends Controller
             'cancelled' => ['pending', 'confirmed'],
         };
         if (!in_array($booking->status, $allowed, true)) return response()->json(['message' => "Reservation cannot be changed from {$booking->status} to {$target}"], 422);
+        // Completing frees the slot for new bookings (see Booking::booted()),
+        // which is only correct once the appointment has actually happened —
+        // completing it early would let someone else book the same staff
+        // member for a slot that hasn't occurred yet.
+        if ($target === 'completed' && $booking->date->isFuture()) {
+            return response()->json(['message' => 'Cannot mark a reservation completed before its scheduled time'], 422);
+        }
         $booking->status = $target;
         if ($target === 'completed') $booking->completed_at = now();
         $booking->save();
