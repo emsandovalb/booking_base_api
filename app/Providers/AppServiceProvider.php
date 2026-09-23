@@ -31,5 +31,28 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('login', function (Request $request) {
             return Limit::perMinute(5)->by(LoginThrottle::key($request));
         });
+
+        // Same email+IP keying as `login`: these are all unauthenticated
+        // endpoints that accept an email, so the abuse shape (credential
+        // stuffing, account enumeration, mailbox-bombing a target via
+        // password reset) is the same one `login` already guards against.
+        RateLimiter::for('register', function (Request $request) {
+            return Limit::perMinute(5)->by(LoginThrottle::key($request));
+        });
+        RateLimiter::for('password-forgot', function (Request $request) {
+            return Limit::perMinute(5)->by(LoginThrottle::key($request));
+        });
+        RateLimiter::for('password-reset', function (Request $request) {
+            return Limit::perMinute(5)->by(LoginThrottle::key($request));
+        });
+
+        // Booking create/reschedule require auth:sanctum, so the caller is
+        // always an authenticated user — key by user id rather than
+        // email+IP. Generous enough for a legitimate customer clicking
+        // through several time slots, tight enough to stop a scripted
+        // agenda-filling attack from one account.
+        RateLimiter::for('booking-write', function (Request $request) {
+            return Limit::perMinute(20)->by($request->user()?->id ?: $request->ip());
+        });
     }
 }
