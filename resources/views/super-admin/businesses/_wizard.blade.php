@@ -104,7 +104,7 @@
 
     .wizard-steps {
         display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
+        grid-template-columns: repeat(8, minmax(0, 1fr));
         gap: 10px;
         margin-bottom: 16px;
     }
@@ -221,6 +221,173 @@
     .wizard-field.span-4 { grid-column: span 4; }
     .wizard-field.span-3 { grid-column: span 3; }
     .wizard-field.full { grid-column: 1 / -1; }
+
+    /* Live brand preview (Branding step) — a rough phone-shaped mockup of
+       the login screen + bottom nav, restyled purely with CSS custom
+       properties so it can update instantly as the admin edits colors,
+       with no server round-trip or Flutter build involved. It's an
+       approximation, not pixel-identical to the real app. */
+    .branding-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 260px;
+        gap: 24px;
+        align-items: start;
+    }
+
+    .brand-preview {
+        position: sticky;
+        top: 16px;
+    }
+
+    .brand-preview-label {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .brand-preview-phone {
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        padding: 10px;
+        background: #05070d;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .brand-preview-screen {
+        --preview-primary: #D4A84F;
+        --preview-secondary: #E8C36A;
+        --preview-bg: #07111f;
+        --preview-text: #ffffff;
+        background: var(--preview-bg);
+        color: var(--preview-text);
+        border-radius: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        min-height: 480px;
+        font-family: inherit;
+        transition: background-color .15s ease, color .15s ease;
+    }
+
+    .brand-preview-topspace { height: 18px; }
+
+    .brand-preview-logo-wrap {
+        display: flex;
+        justify-content: center;
+        padding: 6px 0 10px;
+    }
+
+    .brand-preview-logo {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--preview-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 20px;
+        color: #000;
+        overflow: hidden;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+    }
+
+    .brand-preview-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .brand-preview-card {
+        margin: 4px 14px 14px;
+        padding: 16px 14px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .brand-preview-name {
+        font-weight: 800;
+        font-size: 15px;
+        text-align: center;
+        color: var(--preview-primary);
+        margin-bottom: 2px;
+        overflow-wrap: anywhere;
+    }
+
+    .brand-preview-tagline {
+        font-size: 11px;
+        text-align: center;
+        opacity: 0.72;
+        margin-bottom: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    .brand-preview-input {
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 10px;
+        padding: 9px 10px;
+        font-size: 11px;
+        opacity: 0.6;
+        margin-bottom: 8px;
+    }
+
+    .brand-preview-button {
+        margin-top: 4px;
+        background: var(--preview-primary);
+        color: #000;
+        text-align: center;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+    .brand-preview-navbar {
+        margin-top: auto;
+        display: flex;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 10px 4px 14px;
+    }
+
+    .brand-preview-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        font-size: 9px;
+        opacity: 0.55;
+    }
+
+    .brand-preview-nav-item.active {
+        opacity: 1;
+        color: var(--preview-primary);
+        font-weight: 700;
+    }
+
+    .brand-preview-nav-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    @media (max-width: 860px) {
+        .branding-layout {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .brand-preview {
+            position: static;
+            max-width: 260px;
+            margin: 0 auto;
+        }
+    }
 
     .field-tile {
         display: grid;
@@ -339,6 +506,30 @@
         gap: 10px;
     }
 
+    .setup-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .setup-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(120px, .7fr) minmax(130px, .7fr);
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        background: rgba(255,255,255,0.03);
+    }
+
+    .setup-row.staff-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .setup-row label {
+        font-size: 12px;
+        color: var(--muted);
+    }
+
     .chip {
         padding: 8px 12px;
         border-radius: 999px;
@@ -392,6 +583,11 @@
         .hour-row {
             grid-template-columns: 1fr;
         }
+
+        .setup-row,
+        .setup-row.staff-row {
+            grid-template-columns: 1fr;
+        }
     }
 
     @media (max-width: 720px) {
@@ -418,6 +614,7 @@
     id="businessWizard"
     method="POST"
     action="{{ $action }}"
+    enctype="multipart/form-data"
     data-existing-slugs='@json($existingSlugs ?? [])'
 >
     @csrf
@@ -427,17 +624,17 @@
             <div class="wizard-banner">
                 <div class="wizard-kicker">Super Admin onboarding</div>
                 <h2>Multi-step business creation wizard</h2>
-                <p>Use this flow to provision a brand new business, its initial owner account, and the core Bemuss config in one controlled finish step.</p>
+                <p>Launch a real bookable business in one pass: identity, branding, hours, services, staff, owner access, and handoff links.</p>
             </div>
 
             <div class="wizard-note">
                 <div class="note-card">
                     <div class="label">Flow</div>
-                    <div class="value">Identity, brand, contact, hours, owner, features, review.</div>
+                    <div class="value">Identity, brand, contact, hours, launch setup, owner, features, review.</div>
                 </div>
                 <div class="note-card">
                     <div class="label">Guardrails</div>
-                    <div class="value">Validation before step changes, slug uniqueness check, creation only on Finish.</div>
+                    <div class="value">No demo records are copied. Initial staff are linked to every launch service and can be refined later.</div>
                 </div>
             </div>
         </div>
@@ -449,9 +646,10 @@
                     <div class="step-pill" data-step-pill="2"><span class="num">Step 2</span><span class="title">Brand</span></div>
                     <div class="step-pill" data-step-pill="3"><span class="num">Step 3</span><span class="title">Contact</span></div>
                     <div class="step-pill" data-step-pill="4"><span class="num">Step 4</span><span class="title">Hours</span></div>
-                    <div class="step-pill" data-step-pill="5"><span class="num">Step 5</span><span class="title">Owner</span></div>
-                    <div class="step-pill" data-step-pill="6"><span class="num">Step 6</span><span class="title">Features</span></div>
-                    <div class="step-pill" data-step-pill="7"><span class="num">Step 7</span><span class="title">Review</span></div>
+                    <div class="step-pill" data-step-pill="5"><span class="num">Step 5</span><span class="title">Launch setup</span></div>
+                    <div class="step-pill" data-step-pill="6"><span class="num">Step 6</span><span class="title">Owner</span></div>
+                    <div class="step-pill" data-step-pill="7"><span class="num">Step 7</span><span class="title">Features</span></div>
+                    <div class="step-pill" data-step-pill="8"><span class="num">Step 8</span><span class="title">Review</span></div>
                 </div>
                 <div class="progress-track" aria-hidden="true">
                     <div class="progress-fill" id="wizardProgress"></div>
@@ -531,59 +729,87 @@
                         <div class="panel-badge">Branding</div>
                     </div>
 
-                    <div class="wizard-grid">
-                        <div class="wizard-field">
-                            <label>App Name</label>
-                            <input name="brand[app_name]" value="{{ old('brand.app_name', $form['brand']['app_name'] ?? '') }}" required>
-                            @error('brand.app_name') <div class="error">{{ $message }}</div> @enderror
+                    <div class="branding-layout">
+                        <div class="wizard-grid">
+                            <div class="wizard-field">
+                                <label>App Name</label>
+                                <input name="brand[app_name]" value="{{ old('brand.app_name', $form['brand']['app_name'] ?? '') }}" required>
+                                @error('brand.app_name') <div class="error">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="wizard-field">
+                                <label>Display Name</label>
+                                <input name="brand[display_name]" value="{{ old('brand.display_name', $form['brand']['display_name'] ?? '') }}" required>
+                                @error('brand.display_name') <div class="error">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="wizard-field">
+                                <label>Short Name</label>
+                                <input name="brand[short_name]" value="{{ old('brand.short_name', $form['brand']['short_name'] ?? '') }}" required>
+                                @error('brand.short_name') <div class="error">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="wizard-field">
+                                <label>Tagline</label>
+                                <input name="brand[tagline]" value="{{ old('brand.tagline', $form['brand']['tagline'] ?? '') }}">
+                                @error('brand.tagline') <div class="error">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="wizard-field full">
+                                <label>Subtitle</label>
+                                <input name="brand[subtitle]" value="{{ old('brand.subtitle', $form['brand']['subtitle'] ?? '') }}">
+                                @error('brand.subtitle') <div class="error">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="wizard-field">
+                                <label>Primary Color</label>
+                                <input name="brand[primary_color]" value="{{ old('brand.primary_color', $form['brand']['primary_color'] ?? '') }}" placeholder="#D4A84F" required>
+                                @error('brand.primary_color') <div class="error">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="wizard-field">
+                                <label>Secondary Color</label>
+                                <input name="brand[secondary_color]" value="{{ old('brand.secondary_color', $form['brand']['secondary_color'] ?? '') }}" placeholder="#E8C36A" required>
+                                @error('brand.secondary_color') <div class="error">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="wizard-field">
+                                <label>Background Color</label>
+                                <input name="brand[background_color]" value="{{ old('brand.background_color', $form['brand']['background_color'] ?? '') }}" placeholder="#07111f" required>
+                                @error('brand.background_color') <div class="error">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="wizard-field full">
+                                <label>Business Logo</label>
+                                <input type="file" name="brand[logo]" accept="image/png,image/jpeg,image/webp" data-brand-logo-input>
+                                <div class="help">Optional PNG, JPG or WebP up to 2 MB. If omitted, the PWA uses a clean initials icon—never another tenant's logo.</div>
+                                @error('brand.logo') <div class="error">{{ $message }}</div> @enderror
+                            </div>
                         </div>
-                        <div class="wizard-field">
-                            <label>Display Name</label>
-                            <input name="brand[display_name]" value="{{ old('brand.display_name', $form['brand']['display_name'] ?? '') }}" required>
-                            @error('brand.display_name') <div class="error">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="wizard-field">
-                            <label>Short Name</label>
-                            <input name="brand[short_name]" value="{{ old('brand.short_name', $form['brand']['short_name'] ?? '') }}" required>
-                            @error('brand.short_name') <div class="error">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="wizard-field">
-                            <label>Tagline</label>
-                            <input name="brand[tagline]" value="{{ old('brand.tagline', $form['brand']['tagline'] ?? '') }}">
-                            @error('brand.tagline') <div class="error">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="wizard-field full">
-                            <label>Subtitle</label>
-                            <input name="brand[subtitle]" value="{{ old('brand.subtitle', $form['brand']['subtitle'] ?? '') }}">
-                            @error('brand.subtitle') <div class="error">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="wizard-field">
-                            <label>Primary Color</label>
-                            <input name="brand[primary_color]" value="{{ old('brand.primary_color', $form['brand']['primary_color'] ?? '') }}" placeholder="#D4A84F" required>
-                            @error('brand.primary_color') <div class="error">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="wizard-field">
-                            <label>Secondary Color</label>
-                            <input name="brand[secondary_color]" value="{{ old('brand.secondary_color', $form['brand']['secondary_color'] ?? '') }}" placeholder="#E8C36A" required>
-                            @error('brand.secondary_color') <div class="error">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="wizard-field">
-                            <label>Background Color</label>
-                            <input name="brand[background_color]" value="{{ old('brand.background_color', $form['brand']['background_color'] ?? '') }}" placeholder="#07111f" required>
-                            @error('brand.background_color') <div class="error">{{ $message }}</div> @enderror
-                        </div>
-                        <div class="wizard-field full">
-                            <div class="placeholder-stack">
-                                <div class="placeholder">
-                                    <div>
-                                        <strong>Logo placeholder</strong>
-                                        <div>No upload yet. Reserve this space for future branding assets.</div>
+
+                        <div class="brand-preview" data-brand-preview>
+                            <div class="brand-preview-label">Live preview — this is roughly how the app will look</div>
+                            <div class="brand-preview-phone">
+                                <div class="brand-preview-screen" data-preview-screen>
+                                    <div class="brand-preview-topspace"></div>
+                                    <div class="brand-preview-logo-wrap">
+                                        <div class="brand-preview-logo" data-preview-logo>
+                                            <img data-preview-logo-img hidden alt="">
+                                            <span data-preview-logo-initials>?</span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="placeholder">
-                                    <div>
-                                        <strong>Hero placeholder</strong>
-                                        <div>Hero image upload is intentionally deferred in this batch.</div>
+                                    <div class="brand-preview-card">
+                                        <div class="brand-preview-name" data-preview-name>Business Name</div>
+                                        <div class="brand-preview-tagline" data-preview-tagline>Tagline goes here</div>
+                                        <div class="brand-preview-input">Correo electrónico</div>
+                                        <div class="brand-preview-input">Contraseña</div>
+                                        <div class="brand-preview-button" data-preview-button>Iniciar sesión</div>
+                                    </div>
+                                    <div class="brand-preview-navbar" data-preview-navbar>
+                                        <div class="brand-preview-nav-item active" data-preview-nav-active>
+                                            <span class="brand-preview-nav-dot"></span>Inicio
+                                        </div>
+                                        <div class="brand-preview-nav-item">
+                                            <span class="brand-preview-nav-dot"></span>Servicios
+                                        </div>
+                                        <div class="brand-preview-nav-item">
+                                            <span class="brand-preview-nav-dot"></span>Reservas
+                                        </div>
+                                        <div class="brand-preview-nav-item">
+                                            <span class="brand-preview-nav-dot"></span>Perfil
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -726,6 +952,48 @@
                 <section class="wizard-panel" data-panel="5">
                     <div class="panel-heading">
                         <div>
+                            <h3>Launch Services & Staff</h3>
+                            <p>Add the real prices and team needed to make the public link bookable immediately.</p>
+                        </div>
+                        <div class="panel-badge">Bookable setup</div>
+                    </div>
+
+                    @php
+                        $setupServices = old('setup.services', $form['setup']['services'] ?? []);
+                        $setupStaff = old('setup.staff', $form['setup']['staff'] ?? []);
+                    @endphp
+                    <div class="wizard-grid">
+                        <div class="wizard-field full">
+                            <label>Initial services</label>
+                            <div class="help" style="margin-bottom: 10px;">The first row is required. Leave unused rows blank.</div>
+                            <div class="setup-list">
+                                @foreach ($setupServices as $index => $service)
+                                    <div class="setup-row">
+                                        <div><label>Service {{ $index + 1 }}</label><input name="setup[services][{{ $index }}][name]" value="{{ $service['name'] ?? '' }}" placeholder="e.g. Classic cut" {{ $index === 0 ? 'required' : '' }}>@error("setup.services.$index.name") <div class="error">{{ $message }}</div> @enderror</div>
+                                        <div><label>Price</label><input type="number" step="0.01" min="0" name="setup[services][{{ $index }}][price]" value="{{ $service['price'] ?? '' }}" placeholder="0.00">@error("setup.services.$index.price") <div class="error">{{ $message }}</div> @enderror</div>
+                                        <div><label>Duration</label><select name="setup[services][{{ $index }}][duration_minutes]">@foreach ([15, 30, 45, 60, 75, 90, 120] as $minutes)<option value="{{ $minutes }}" @selected((int)($service['duration_minutes'] ?? 30) === $minutes)>{{ $minutes }} min</option>@endforeach</select>@error("setup.services.$index.duration_minutes") <div class="error">{{ $message }}</div> @enderror</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="wizard-field full">
+                            <label>Initial staff</label>
+                            <div class="help" style="margin-bottom: 10px;">The first row is required. Launch staff are assigned to every service above; the owner can refine assignments in the PWA.</div>
+                            <div class="setup-list">
+                                @foreach ($setupStaff as $index => $person)
+                                    <div class="setup-row staff-row">
+                                        <div><label>Professional {{ $index + 1 }}</label><input name="setup[staff][{{ $index }}][name]" value="{{ $person['name'] ?? '' }}" placeholder="Full name" {{ $index === 0 ? 'required' : '' }}>@error("setup.staff.$index.name") <div class="error">{{ $message }}</div> @enderror</div>
+                                        <div><label>Phone (optional)</label><input name="setup[staff][{{ $index }}][phone]" value="{{ $person['phone'] ?? '' }}" placeholder="+506 0000-0000">@error("setup.staff.$index.phone") <div class="error">{{ $message }}</div> @enderror</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="wizard-panel" data-panel="6">
+                    <div class="panel-heading">
+                        <div>
                             <h3>Owner Account</h3>
                             <p>Create the first administrator and attach it to the new business.</p>
                         </div>
@@ -761,7 +1029,7 @@
                     </div>
                 </section>
 
-                <section class="wizard-panel" data-panel="6">
+                <section class="wizard-panel" data-panel="7">
                     <div class="panel-heading">
                         <div>
                             <h3>Features</h3>
@@ -790,7 +1058,7 @@
                     </div>
                 </section>
 
-                <section class="wizard-panel" data-panel="7">
+                <section class="wizard-panel" data-panel="8">
                     <div class="panel-heading">
                         <div>
                             <h3>Review</h3>
@@ -845,6 +1113,14 @@
                             </div>
                         </div>
                         <div class="summary-card">
+                            <h4>Launch catalog</h4>
+                            <div class="summary-list">
+                                <div class="row"><span>Services</span><strong id="summarySetupServices">-</strong></div>
+                                <div class="row"><span>Staff</span><strong id="summarySetupStaff">-</strong></div>
+                                <div class="row"><span>Assignments</span><strong>All staff → all launch services</strong></div>
+                            </div>
+                        </div>
+                        <div class="summary-card">
                             <h4>Enabled Features</h4>
                             <div class="feature-chips" id="summaryFeatures"></div>
                         </div>
@@ -852,7 +1128,7 @@
 
                     <div class="note-card" style="margin-top: 16px;">
                         <div class="label">Final action</div>
-                        <div class="value">Press Finish to create the business, configs, owner user, and business membership, then redirect to the workspace.</div>
+                        <div class="value">Finish creates the tenant, owner, real service catalog, staff assignments, branding, and working-hours rules, then redirects to the handoff workspace.</div>
                     </div>
                 </section>
 
@@ -904,6 +1180,8 @@
         hoursSchedule: document.getElementById('summaryHoursSchedule'),
         ownerName: document.getElementById('summaryOwnerName'),
         ownerEmail: document.getElementById('summaryOwnerEmail'),
+        setupServices: document.getElementById('summarySetupServices'),
+        setupStaff: document.getElementById('summarySetupStaff'),
         features: document.getElementById('summaryFeatures'),
     };
 
@@ -1051,6 +1329,14 @@
 
         if (summary.ownerName) summary.ownerName.textContent = getValue('[name="owner[full_name]"]');
         if (summary.ownerEmail) summary.ownerEmail.textContent = getValue('[name="owner[email]"]');
+        if (summary.setupServices) {
+            summary.setupServices.textContent = Array.from(form.querySelectorAll('input[name^="setup[services]"][name$="[name]"]'))
+                .filter(input => input.value.trim()).length;
+        }
+        if (summary.setupStaff) {
+            summary.setupStaff.textContent = Array.from(form.querySelectorAll('input[name^="setup[staff]"][name$="[name]"]'))
+                .filter(input => input.value.trim()).length;
+        }
         if (summary.features) {
             summary.features.innerHTML = '';
             checkboxValues.length ? checkboxValues.forEach(label => {
@@ -1082,10 +1368,98 @@
         return 1;
     }
 
+    // Live brand preview (Branding step): reads the same brand[...] fields
+    // the form already submits, so it never drifts from what actually gets
+    // saved — no separate "preview state" to keep in sync by hand.
+    const previewScreen = form.querySelector('[data-preview-screen]');
+    const previewLogoImg = form.querySelector('[data-preview-logo-img]');
+    const previewLogoInitials = form.querySelector('[data-preview-logo-initials]');
+    const previewName = form.querySelector('[data-preview-name]');
+    const previewTagline = form.querySelector('[data-preview-tagline]');
+    const previewButton = form.querySelector('[data-preview-button]');
+    const previewNavActive = form.querySelector('[data-preview-nav-active]');
+    const logoInput = form.querySelector('[data-brand-logo-input]');
+    let previewLogoObjectUrl = null;
+
+    function isValidHexColor(value) {
+        return /^#?[0-9a-f]{6}$/i.test(value.trim());
+    }
+
+    function normalizeHexColor(value, fallback) {
+        const trimmed = value.trim();
+        if (!isValidHexColor(trimmed)) return fallback;
+        return trimmed.startsWith('#') ? trimmed : `#${trimmed}`;
+    }
+
+    // Mirrors BrandTheme._bestTextFor() on the Flutter side: relative
+    // luminance decides black vs white text, so the preview's contrast
+    // choice matches what the real app would actually render.
+    function bestTextColorFor(hex) {
+        const clean = hex.replace('#', '');
+        const r = parseInt(clean.substring(0, 2), 16) / 255;
+        const g = parseInt(clean.substring(2, 4), 16) / 255;
+        const b = parseInt(clean.substring(4, 6), 16) / 255;
+        const linear = channel => channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+        const luminance = 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+        return luminance > 0.5 ? '#000000' : '#ffffff';
+    }
+
+    function syncBrandPreview() {
+        if (!previewScreen) return;
+
+        const fieldValue = selector => form.querySelector(selector)?.value || '';
+        const primary = normalizeHexColor(fieldValue('[name="brand[primary_color]"]'), '#D4A84F');
+        const secondary = normalizeHexColor(fieldValue('[name="brand[secondary_color]"]'), '#E8C36A');
+        const background = normalizeHexColor(fieldValue('[name="brand[background_color]"]'), '#07111f');
+
+        previewScreen.style.setProperty('--preview-primary', primary);
+        previewScreen.style.setProperty('--preview-secondary', secondary);
+        previewScreen.style.setProperty('--preview-bg', background);
+        previewScreen.style.setProperty('--preview-text', bestTextColorFor(background));
+
+        const displayName = form.querySelector('[name="brand[display_name]"]')?.value.trim();
+        const appName = form.querySelector('[name="brand[app_name]"]')?.value.trim();
+        const shortName = form.querySelector('[name="brand[short_name]"]')?.value.trim();
+        if (previewName) previewName.textContent = displayName || appName || 'Business Name';
+        if (previewTagline) {
+            const tagline = form.querySelector('[name="brand[tagline]"]')?.value.trim();
+            previewTagline.textContent = tagline || 'Tagline goes here';
+        }
+        if (previewButton) previewButton.style.color = bestTextColorFor(primary);
+        if (previewNavActive) previewNavActive.style.color = primary;
+
+        if (previewLogoInitials) {
+            const source = shortName || displayName || appName || '?';
+            const initials = source.trim().split(/\s+/).slice(0, 2).map(word => word[0]).join('').toUpperCase();
+            previewLogoInitials.textContent = initials || '?';
+            previewLogoInitials.style.color = bestTextColorFor(primary);
+        }
+    }
+
+    if (logoInput) {
+        logoInput.addEventListener('change', () => {
+            const file = logoInput.files && logoInput.files[0];
+            if (previewLogoObjectUrl) {
+                URL.revokeObjectURL(previewLogoObjectUrl);
+                previewLogoObjectUrl = null;
+            }
+            if (file && previewLogoImg && previewLogoInitials) {
+                previewLogoObjectUrl = URL.createObjectURL(file);
+                previewLogoImg.src = previewLogoObjectUrl;
+                previewLogoImg.hidden = false;
+                previewLogoInitials.hidden = true;
+            } else if (previewLogoImg && previewLogoInitials) {
+                previewLogoImg.hidden = true;
+                previewLogoInitials.hidden = false;
+            }
+        });
+    }
+
     form.querySelectorAll('input, select, textarea').forEach(field => {
         field.addEventListener('input', () => {
             syncHoursState();
             syncSummary();
+            syncBrandPreview();
             if (field === businessNameInput || field === slugInput) {
                 syncSlugPreview();
             }
@@ -1096,6 +1470,7 @@
         field.addEventListener('change', () => {
             syncHoursState();
             syncSummary();
+            syncBrandPreview();
             if (field === businessNameInput || field === slugInput) {
                 syncSlugPreview();
             }
@@ -1145,6 +1520,7 @@
 
     syncHoursState();
     syncSummary();
+    syncBrandPreview();
     syncSlugPreview();
     showStep(initialStep());
 })();
