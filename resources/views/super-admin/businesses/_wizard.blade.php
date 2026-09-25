@@ -342,7 +342,7 @@
         font-size: 20px;
         color: #000;
         overflow: hidden;
-        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--preview-text) 8%, transparent);
     }
 
     .brand-preview-logo img {
@@ -355,8 +355,8 @@
         margin: 4px 14px 14px;
         padding: 16px 14px;
         border-radius: 16px;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: color-mix(in srgb, var(--preview-text) 6%, transparent);
+        border: 1px solid color-mix(in srgb, var(--preview-text) 10%, transparent);
     }
 
     .brand-preview-name {
@@ -377,8 +377,8 @@
     }
 
     .brand-preview-input {
-        background: rgba(255, 255, 255, 0.07);
-        border: 1px solid rgba(255, 255, 255, 0.10);
+        background: color-mix(in srgb, var(--preview-text) 7%, transparent);
+        border: 1px solid color-mix(in srgb, var(--preview-text) 14%, transparent);
         border-radius: 10px;
         padding: 9px 10px;
         font-size: 11px;
@@ -400,7 +400,7 @@
     .brand-preview-navbar {
         margin-top: auto;
         display: flex;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-top: 1px solid color-mix(in srgb, var(--preview-text) 12%, transparent);
         padding: 10px 4px 14px;
     }
 
@@ -449,8 +449,8 @@
         margin: 12px 14px 0;
         padding: 9px 12px;
         border-radius: 10px;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: color-mix(in srgb, var(--preview-text) 8%, transparent);
+        border: 1px solid color-mix(in srgb, var(--preview-text) 14%, transparent);
         font-size: 11px;
         opacity: .6;
     }
@@ -470,8 +470,8 @@
     }
 
     .brand-preview-home-card {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: color-mix(in srgb, var(--preview-text) 6%, transparent);
+        border: 1px solid color-mix(in srgb, var(--preview-text) 12%, transparent);
         border-radius: 12px;
         overflow: hidden;
         padding-bottom: 8px;
