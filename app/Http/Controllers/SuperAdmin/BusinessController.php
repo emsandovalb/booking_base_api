@@ -5,11 +5,12 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Business;
-use App\Support\BrandingConfig;
 use App\Services\SuperAdmin\AuditLogService;
 use App\Services\SuperAdmin\BusinessWizardService;
+use App\Support\BrandingConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class BusinessController extends Controller
@@ -34,9 +35,9 @@ class BusinessController extends Controller
     public function show(Business $business, Request $request, AuditLogService $auditLogService)
     {
         $business->loadCount([
-            'courts as resources_count',
+            'courts as services_count',
             'staff as staff_count',
-            'bookings as bookings_count',
+            'bookings as reservations_count',
             'users as members_count',
         ])->load([
             'users' => function ($query) {
@@ -73,7 +74,37 @@ class BusinessController extends Controller
     public function store(Request $request, BusinessWizardService $wizardService, AuditLogService $auditLogService)
     {
         $data = $request->validate($this->wizardRules($wizardService));
-        $business = $wizardService->createBusiness($data, $request->user(), $auditLogService);
+        $storedLogoPath = null;
+        $storedHeroPath = null;
+
+        if ($request->hasFile('brand.logo')) {
+            $storedLogoPath = $request->file('brand.logo')->store(
+                'businesses/'.$data['business']['slug'].'/branding',
+                'public',
+            );
+            $data['brand']['logo_path'] = Storage::url($storedLogoPath);
+        }
+
+        if ($request->hasFile('brand.hero_image')) {
+            $storedHeroPath = $request->file('brand.hero_image')->store(
+                'businesses/'.$data['business']['slug'].'/branding',
+                'public',
+            );
+            $data['brand']['hero_path'] = Storage::url($storedHeroPath);
+        }
+
+        try {
+            $business = $wizardService->createBusiness($data, $request->user(), $auditLogService);
+        } catch (\Throwable $exception) {
+            if ($storedLogoPath) {
+                Storage::disk('public')->delete($storedLogoPath);
+            }
+            if ($storedHeroPath) {
+                Storage::disk('public')->delete($storedHeroPath);
+            }
+
+            throw $exception;
+        }
 
         return redirect()
             ->route('super-admin.businesses.workspace', $business)
@@ -179,6 +210,8 @@ class BusinessController extends Controller
             'brand.primary_color' => ['required', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
             'brand.secondary_color' => ['required', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
             'brand.background_color' => ['required', 'regex:/^#(?:[0-9a-fA-F]{3}){1,2}$/'],
+            'brand.logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'brand.hero_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'contact.phone' => ['nullable', 'string', 'max:50'],
             'contact.whatsapp' => ['nullable', 'string', 'max:50'],
             'contact.email' => ['nullable', 'email', 'max:255'],
@@ -193,15 +226,22 @@ class BusinessController extends Controller
             'owner.full_name' => ['required', 'string', 'max:255'],
             'owner.email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
             'owner.password' => ['required', 'string', 'min:8', 'confirmed'],
+            'setup.services' => ['nullable', 'array', 'max:12'],
+            'setup.services.*.name' => ['nullable', 'string', 'max:150'],
+            'setup.services.*.price' => ['required_with:setup.services.*.name', 'nullable', 'numeric', 'min:0'],
+            'setup.services.*.duration_minutes' => ['required_with:setup.services.*.name', 'nullable', 'integer', 'min:10', 'max:480'],
+            'setup.staff' => ['nullable', 'array', 'max:12'],
+            'setup.staff.*.name' => ['nullable', 'string', 'max:120'],
+            'setup.staff.*.phone' => ['nullable', 'string', 'max:40'],
         ];
 
         foreach (array_keys($wizardService->weekDays()) as $day) {
             $rules["hours.schedule.{$day}.is_open"] = ['nullable', 'boolean'];
-            $rules["hours.schedule.{$day}.opens_at"] = ['required_if:hours.schedule.' . $day . '.is_open,1', 'date_format:H:i'];
+            $rules["hours.schedule.{$day}.opens_at"] = ['required_if:hours.schedule.'.$day.'.is_open,1', 'date_format:H:i'];
             $rules["hours.schedule.{$day}.closes_at"] = [
-                'required_if:hours.schedule.' . $day . '.is_open,1',
+                'required_if:hours.schedule.'.$day.'.is_open,1',
                 'date_format:H:i',
-                'after:hours.schedule.' . $day . '.opens_at',
+                'after:hours.schedule.'.$day.'.opens_at',
             ];
         }
 
@@ -394,10 +434,10 @@ class BusinessController extends Controller
     private function normalizeBusinessUpdateInput(array $data, ?Business $business = null): array
     {
         $branding = is_array($data['branding'] ?? null) ? $data['branding'] : [];
-        if (!isset($branding['identity']) && isset($data['identity'])) {
+        if (! isset($branding['identity']) && isset($data['identity'])) {
             $branding['identity'] = $data['identity'];
         }
-        if (!isset($branding['appearance']) && isset($data['appearance'])) {
+        if (! isset($branding['appearance']) && isset($data['appearance'])) {
             $branding['appearance'] = $data['appearance'];
         }
 

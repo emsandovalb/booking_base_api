@@ -248,6 +248,31 @@
         text-align: center;
     }
 
+    .brand-preview-tabs {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .brand-preview-tab {
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 6px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+    }
+
+    .brand-preview-tab.active {
+        background: rgba(244, 198, 106, 0.16);
+        border-color: rgba(244, 198, 106, 0.4);
+        color: var(--text);
+    }
+
     .brand-preview-phone {
         border: 1px solid var(--border);
         border-radius: 28px;
@@ -261,7 +286,8 @@
         --preview-secondary: #E8C36A;
         --preview-bg: #07111f;
         --preview-text: #ffffff;
-        background: var(--preview-bg);
+        position: relative;
+        background: var(--preview-bg) center / cover no-repeat;
         color: var(--preview-text);
         border-radius: 20px;
         overflow: hidden;
@@ -271,6 +297,30 @@
         font-family: inherit;
         transition: background-color .15s ease, color .15s ease;
     }
+
+    /* Mirrors the real login/onboarding screens' fixed dark gradient over
+       the hero photo: a deliberate darkening independent of the business's
+       light/dark theme_mode, so text stays readable over any uploaded
+       image. Only visible while a hero image is actually set (see JS). */
+    .brand-preview-hero-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(5,5,5,.55), rgba(9,9,9,.35), rgba(5,5,5,.68));
+        display: none;
+        pointer-events: none;
+    }
+
+    .brand-preview-hero-overlay.visible { display: block; }
+
+    .brand-preview-panel {
+        position: relative;
+        display: none;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .brand-preview-panel.active { display: flex; }
 
     .brand-preview-topspace { height: 18px; }
 
@@ -375,6 +425,73 @@
         height: 8px;
         border-radius: 50%;
         background: currentColor;
+    }
+
+    .brand-preview-home-header {
+        padding: 16px 14px 10px;
+        background: var(--preview-primary);
+    }
+
+    .brand-preview-home-greeting {
+        font-size: 10px;
+        font-weight: 700;
+        opacity: .85;
+        color: var(--preview-on-primary, #000);
+    }
+
+    .brand-preview-home-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--preview-on-primary, #000);
+    }
+
+    .brand-preview-home-search {
+        margin: 12px 14px 0;
+        padding: 9px 12px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        font-size: 11px;
+        opacity: .6;
+    }
+
+    .brand-preview-home-section-title {
+        margin: 16px 14px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        opacity: .75;
+    }
+
+    .brand-preview-home-cards {
+        margin: 0 14px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .brand-preview-home-card {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        overflow: hidden;
+        padding-bottom: 8px;
+    }
+
+    .brand-preview-home-card-thumb {
+        height: 52px;
+        background: linear-gradient(135deg, var(--preview-primary), var(--preview-secondary));
+    }
+
+    .brand-preview-home-card-name {
+        font-size: 10.5px;
+        font-weight: 700;
+        margin: 6px 8px 2px;
+    }
+
+    .brand-preview-home-card-price {
+        font-size: 10px;
+        opacity: .65;
+        margin: 0 8px;
     }
 
     @media (max-width: 860px) {
@@ -777,26 +894,62 @@
                                 <div class="help">Optional PNG, JPG or WebP up to 2 MB. If omitted, the PWA uses a clean initials icon—never another tenant's logo.</div>
                                 @error('brand.logo') <div class="error">{{ $message }}</div> @enderror
                             </div>
+                            <div class="wizard-field full">
+                                <label>Background / Splash Image</label>
+                                <input type="file" name="brand[hero_image]" accept="image/png,image/jpeg,image/webp" data-brand-hero-input>
+                                <div class="help">Optional PNG, JPG or WebP up to 4 MB. Shown behind the login and onboarding screens. If omitted, those screens use a plain dark background.</div>
+                                @error('brand.hero_image') <div class="error">{{ $message }}</div> @enderror
+                            </div>
                         </div>
 
                         <div class="brand-preview" data-brand-preview>
                             <div class="brand-preview-label">Live preview — this is roughly how the app will look</div>
+                            <div class="brand-preview-tabs">
+                                <button type="button" class="brand-preview-tab active" data-preview-tab="login">Login</button>
+                                <button type="button" class="brand-preview-tab" data-preview-tab="home">Home</button>
+                            </div>
                             <div class="brand-preview-phone">
                                 <div class="brand-preview-screen" data-preview-screen>
-                                    <div class="brand-preview-topspace"></div>
-                                    <div class="brand-preview-logo-wrap">
-                                        <div class="brand-preview-logo" data-preview-logo>
-                                            <img data-preview-logo-img hidden alt="">
-                                            <span data-preview-logo-initials>?</span>
+                                    <div class="brand-preview-hero-overlay" data-preview-hero-overlay></div>
+
+                                    <div class="brand-preview-panel active" data-preview-panel="login">
+                                        <div class="brand-preview-topspace"></div>
+                                        <div class="brand-preview-logo-wrap">
+                                            <div class="brand-preview-logo" data-preview-logo>
+                                                <img data-preview-logo-img hidden alt="">
+                                                <span data-preview-logo-initials>?</span>
+                                            </div>
+                                        </div>
+                                        <div class="brand-preview-card">
+                                            <div class="brand-preview-name" data-preview-name>Business Name</div>
+                                            <div class="brand-preview-tagline" data-preview-tagline>Tagline goes here</div>
+                                            <div class="brand-preview-input">Correo electrónico</div>
+                                            <div class="brand-preview-input">Contraseña</div>
+                                            <div class="brand-preview-button" data-preview-button>Iniciar sesión</div>
                                         </div>
                                     </div>
-                                    <div class="brand-preview-card">
-                                        <div class="brand-preview-name" data-preview-name>Business Name</div>
-                                        <div class="brand-preview-tagline" data-preview-tagline>Tagline goes here</div>
-                                        <div class="brand-preview-input">Correo electrónico</div>
-                                        <div class="brand-preview-input">Contraseña</div>
-                                        <div class="brand-preview-button" data-preview-button>Iniciar sesión</div>
+
+                                    <div class="brand-preview-panel" data-preview-panel="home">
+                                        <div class="brand-preview-home-header" data-preview-home-header>
+                                            <div class="brand-preview-home-greeting">Hola, Cliente</div>
+                                            <div class="brand-preview-home-title">Buenos días</div>
+                                        </div>
+                                        <div class="brand-preview-home-search">Buscar servicios...</div>
+                                        <div class="brand-preview-home-section-title">Servicios populares</div>
+                                        <div class="brand-preview-home-cards">
+                                            <div class="brand-preview-home-card">
+                                                <div class="brand-preview-home-card-thumb"></div>
+                                                <div class="brand-preview-home-card-name" data-preview-home-card-name>Servicio</div>
+                                                <div class="brand-preview-home-card-price" data-preview-home-card-price>—</div>
+                                            </div>
+                                            <div class="brand-preview-home-card">
+                                                <div class="brand-preview-home-card-thumb"></div>
+                                                <div class="brand-preview-home-card-name">Servicio</div>
+                                                <div class="brand-preview-home-card-price">—</div>
+                                            </div>
+                                        </div>
                                     </div>
+
                                     <div class="brand-preview-navbar" data-preview-navbar>
                                         <div class="brand-preview-nav-item active" data-preview-nav-active>
                                             <span class="brand-preview-nav-dot"></span>Inicio
@@ -1378,8 +1531,11 @@
     const previewTagline = form.querySelector('[data-preview-tagline]');
     const previewButton = form.querySelector('[data-preview-button]');
     const previewNavActive = form.querySelector('[data-preview-nav-active]');
+    const previewHeroOverlay = form.querySelector('[data-preview-hero-overlay]');
     const logoInput = form.querySelector('[data-brand-logo-input]');
+    const heroInput = form.querySelector('[data-brand-hero-input]');
     let previewLogoObjectUrl = null;
+    let previewHeroObjectUrl = null;
 
     function isValidHexColor(value) {
         return /^#?[0-9a-f]{6}$/i.test(value.trim());
@@ -1416,6 +1572,7 @@
         previewScreen.style.setProperty('--preview-secondary', secondary);
         previewScreen.style.setProperty('--preview-bg', background);
         previewScreen.style.setProperty('--preview-text', bestTextColorFor(background));
+        previewScreen.style.setProperty('--preview-on-primary', bestTextColorFor(primary));
 
         const displayName = form.querySelector('[name="brand[display_name]"]')?.value.trim();
         const appName = form.querySelector('[name="brand[app_name]"]')?.value.trim();
@@ -1454,6 +1611,37 @@
             }
         });
     }
+
+    if (heroInput) {
+        heroInput.addEventListener('change', () => {
+            const file = heroInput.files && heroInput.files[0];
+            if (previewHeroObjectUrl) {
+                URL.revokeObjectURL(previewHeroObjectUrl);
+                previewHeroObjectUrl = null;
+            }
+            if (file && previewScreen) {
+                previewHeroObjectUrl = URL.createObjectURL(file);
+                previewScreen.style.backgroundImage = `url(${previewHeroObjectUrl})`;
+                if (previewHeroOverlay) previewHeroOverlay.classList.add('visible');
+            } else if (previewScreen) {
+                previewScreen.style.backgroundImage = '';
+                if (previewHeroOverlay) previewHeroOverlay.classList.remove('visible');
+            }
+        });
+    }
+
+    // Login / Home preview tabs — purely cosmetic (no form fields), so a
+    // plain click handler is enough; both panels already share the same
+    // live CSS variables set in syncBrandPreview().
+    form.querySelectorAll('[data-preview-tab]').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = tab.dataset.previewTab;
+            form.querySelectorAll('[data-preview-tab]').forEach(t => t.classList.toggle('active', t === tab));
+            form.querySelectorAll('[data-preview-panel]').forEach(panel => {
+                panel.classList.toggle('active', panel.dataset.previewPanel === target);
+            });
+        });
+    });
 
     form.querySelectorAll('input, select, textarea').forEach(field => {
         field.addEventListener('input', () => {

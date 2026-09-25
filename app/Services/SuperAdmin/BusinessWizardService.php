@@ -3,15 +3,18 @@
 namespace App\Services\SuperAdmin;
 
 use App\Models\Business;
+use App\Models\Court;
+use App\Models\Staff;
+use App\Models\StaffRole;
 use App\Models\User;
+use App\Support\BrandingConfig;
 use Illuminate\Support\Facades\DB;
-use App\Services\SuperAdmin\AuditLogService;
 
 class BusinessWizardService
 {
     public function defaults(): array
     {
-        $defaults = config('white_label');
+        $defaults = BrandingConfig::barbershopPreset();
 
         return [
             'business' => [
@@ -30,6 +33,8 @@ class BusinessWizardService
                 'primary_color' => data_get($defaults, 'colors.primary_gold', '#D4A84F'),
                 'secondary_color' => data_get($defaults, 'colors.primary_gold_light', '#E8C36A'),
                 'background_color' => data_get($defaults, 'colors.background', '#07111f'),
+                'logo_path' => '',
+                'hero_path' => '',
             ],
             'contact' => [
                 'phone' => data_get($defaults, 'contact.phone', ''),
@@ -50,6 +55,20 @@ class BusinessWizardService
             'owner' => [
                 'full_name' => '',
                 'email' => '',
+            ],
+            'setup' => [
+                'services' => [
+                    ['name' => '', 'price' => '', 'duration_minutes' => 30],
+                    ['name' => '', 'price' => '', 'duration_minutes' => 30],
+                    ['name' => '', 'price' => '', 'duration_minutes' => 30],
+                    ['name' => '', 'price' => '', 'duration_minutes' => 30],
+                ],
+                'staff' => [
+                    ['name' => '', 'phone' => ''],
+                    ['name' => '', 'phone' => ''],
+                    ['name' => '', 'phone' => ''],
+                    ['name' => '', 'phone' => ''],
+                ],
             ],
             'features' => array_map(
                 fn ($enabled) => (bool) $enabled,
@@ -78,6 +97,8 @@ class BusinessWizardService
                     'created_by' => $actor?->id,
                 ],
             ]);
+
+            $this->createInitialCatalog($business, $owner, $data);
 
             $auditLogService->record(
                 $business,
@@ -140,8 +161,28 @@ class BusinessWizardService
 
     private function mapPayloadForCreate(array $data, ?User $actor): array
     {
-        $defaults = config('white_label');
+        $defaults = BrandingConfig::presetForBusiness(
+            null,
+            $data['business']['business_type'] ?? 'barbershop',
+            $data['business']['slug'] ?? null,
+        );
         $schedule = $data['hours']['schedule'] ?? $this->defaultSchedule();
+        $assets = $defaults['assets'] ?? [];
+        $logoPath = $data['brand']['logo_path'] ?? null;
+        $heroPath = $data['brand']['hero_path'] ?? null;
+        $initialServicesCount = count(array_filter($data['setup']['services'] ?? [], fn (array $service) => filled($service['name'] ?? null)));
+        $initialStaffCount = count(array_filter($data['setup']['staff'] ?? [], fn (array $staff) => filled($staff['name'] ?? null)));
+        if ($logoPath) {
+            $assets['logo_transparent'] = $logoPath;
+            $assets['logo_dark'] = $logoPath;
+            $assets['logo_light'] = $logoPath;
+            $assets['app_icon'] = $logoPath;
+        }
+        if ($heroPath) {
+            $assets['hero_background'] = $heroPath;
+            $assets['login_background'] = $heroPath;
+            $assets['onboarding_background'] = $heroPath;
+        }
 
         return [
             'name' => $data['business']['name'],
@@ -186,8 +227,13 @@ class BusinessWizardService
                 ],
             ],
             'branding_config' => [
-                'assets' => $defaults['assets'] ?? [],
+                'assets' => $assets,
                 'colors' => [
+                    'primary' => $data['brand']['primary_color'] ?? null,
+                    'primary_light' => $data['brand']['secondary_color'] ?? null,
+                    'primary_dark' => $defaults['colors']['primary_dark'] ?? null,
+                    'secondary' => $defaults['colors']['secondary'] ?? null,
+                    'accent' => $defaults['colors']['accent'] ?? null,
                     'primary_gold' => $data['brand']['primary_color'] ?? null,
                     'primary_gold_light' => $data['brand']['secondary_color'] ?? null,
                     'primary_gold_dark' => $defaults['colors']['primary_gold_dark'] ?? null,
@@ -198,6 +244,7 @@ class BusinessWizardService
                     'text_primary' => $defaults['colors']['text_primary'] ?? null,
                     'text_secondary' => $defaults['colors']['text_secondary'] ?? null,
                 ],
+                'appearance' => $defaults['appearance'] ?? [],
             ],
             'feature_config' => [
                 'features' => array_map(fn ($enabled) => (bool) $enabled, $data['features'] ?? []),
@@ -211,8 +258,82 @@ class BusinessWizardService
                         'email' => $data['owner']['email'] ?? null,
                     ],
                     'weekly_schedule' => $schedule,
+                    'initial_services_count' => $initialServicesCount,
+                    'initial_staff_count' => $initialStaffCount,
+                    'ready_for_handoff' => $initialServicesCount > 0 && $initialStaffCount > 0,
                 ],
             ],
+        ];
+    }
+
+    private function createInitialCatalog(Business $business, User $owner, array $data): void
+    {
+        $schedule = $data['hours']['schedule'] ?? $this->defaultSchedule();
+        [$openHour, $closeHour] = $this->catalogHours($schedule);
+        $hoursNote = $this->buildWeeklySummary($schedule);
+        $address = filled($data['contact']['address'] ?? null)
+            ? trim($data['contact']['address'])
+            : ($this->joinLocation($data['contact']['city'] ?? null, $data['contact']['country'] ?? null) ?: 'Por definir');
+        $serviceImage = data_get($business->branding_config, 'assets.service_placeholder');
+        $services = [];
+
+        foreach ($data['setup']['services'] ?? [] as $serviceData) {
+            if (! filled($serviceData['name'] ?? null)) {
+                continue;
+            }
+
+            $services[] = Court::create([
+                'business_id' => $business->id,
+                'owner_id' => $owner->id,
+                'name' => trim($serviceData['name']),
+                'address' => $address,
+                'price_per_hour' => $serviceData['price'],
+                'duration_hours' => 1,
+                'duration_minutes' => $serviceData['duration_minutes'],
+                'open_hour' => $openHour,
+                'close_hour' => $closeHour,
+                'business_hours_note' => $hoursNote,
+                'rating' => 0,
+                'images' => $serviceImage ? [$serviceImage] : [],
+                'status' => 'active',
+            ]);
+        }
+
+        $role = StaffRole::firstOrCreate(
+            ['slug' => 'barber'],
+            ['name' => 'Barbero', 'description' => 'Profesional de barbería'],
+        );
+
+        foreach ($data['setup']['staff'] ?? [] as $staffData) {
+            if (! filled($staffData['name'] ?? null)) {
+                continue;
+            }
+
+            $staff = Staff::create([
+                'business_id' => $business->id,
+                'staff_role_id' => $role->id,
+                'name' => trim($staffData['name']),
+                'phone' => $staffData['phone'] ?? null,
+                'is_active' => true,
+            ]);
+
+            $staff->courts()->sync(collect($services)->mapWithKeys(
+                fn (Court $service, int $index) => [$service->id => ['is_primary' => $index === 0]],
+            )->all());
+        }
+    }
+
+    private function catalogHours(array $schedule): array
+    {
+        $openDays = collect($schedule)->filter(fn (array $day) => (bool) ($day['is_open'] ?? false));
+
+        if ($openDays->isEmpty()) {
+            return ['09:00', '18:00'];
+        }
+
+        return [
+            $openDays->min(fn (array $day) => $day['opens_at'] ?? '09:00'),
+            $openDays->max(fn (array $day) => $day['closes_at'] ?? '18:00'),
         ];
     }
 
@@ -235,8 +356,9 @@ class BusinessWizardService
 
         foreach ($this->weekDays() as $dayKey => $dayLabel) {
             $day = $schedule[$dayKey] ?? [];
-            if (!($day['is_open'] ?? false)) {
-                $lines[] = $dayLabel . ' closed';
+            if (! ($day['is_open'] ?? false)) {
+                $lines[] = $dayLabel.' closed';
+
                 continue;
             }
 
@@ -257,8 +379,9 @@ class BusinessWizardService
 
         foreach ($this->weekDays() as $dayKey => $dayLabel) {
             $day = $schedule[$dayKey] ?? [];
-            if (!($day['is_open'] ?? false)) {
-                $details[] = $dayLabel . ' closed';
+            if (! ($day['is_open'] ?? false)) {
+                $details[] = $dayLabel.' closed';
+
                 continue;
             }
 
