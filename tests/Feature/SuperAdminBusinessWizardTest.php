@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Business;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class SuperAdminBusinessWizardTest extends TestCase
@@ -47,6 +50,48 @@ class SuperAdminBusinessWizardTest extends TestCase
                 'owner.email',
                 'owner.password',
             ]);
+    }
+
+    public function test_wizard_creates_a_bookable_first_customer_setup(): void
+    {
+        Storage::fake('public');
+        $admin = $this->makeAdmin();
+        $payload = $this->wizardPayload([
+            'brand' => ['logo' => UploadedFile::fake()->createWithContent(
+                'first-shop.png',
+                base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2n7sAAAAASUVORK5CYII='),
+            )],
+            'setup' => [
+                'services' => [
+                    ['name' => 'Corte clásico', 'price' => 8000, 'duration_minutes' => 45],
+                    ['name' => 'Barba', 'price' => 5000, 'duration_minutes' => 30],
+                ],
+                'staff' => [
+                    ['name' => 'Carlos Barbero', 'phone' => '+506 8888-1111'],
+                    ['name' => 'Luis Barbero', 'phone' => '+506 8888-2222'],
+                ],
+            ],
+        ]);
+
+        $this->actingAs($admin)
+            ->post('/super-admin/businesses', $payload)
+            ->assertRedirect();
+
+        $business = Business::where('slug', 'bemuss-wizard')->firstOrFail();
+        $this->assertCount(2, $business->courts);
+        $this->assertCount(2, $business->staff);
+        $this->assertSame(4, $business->staff->sum(fn ($staff) => $staff->courts()->count()));
+        $this->assertSame('09:00', substr($business->courts->first()->open_hour, 0, 5));
+        $this->assertSame('18:00', substr($business->courts->first()->close_hour, 0, 5));
+        $this->assertTrue((bool) data_get($business->metadata, 'onboarding.ready_for_handoff'));
+        $this->assertStringStartsWith('/storage/businesses/bemuss-wizard/branding/', data_get($business->branding_config, 'assets.logo_transparent'));
+        Storage::disk('public')->assertExists(str_replace('/storage/', '', data_get($business->branding_config, 'assets.logo_transparent')));
+        $this->actingAs($admin)
+            ->get(route('super-admin.businesses.workspace', $business))
+            ->assertOk()
+            ->assertSee('First-customer handoff')
+            ->assertSee(route('booking.public', $business->slug))
+            ->assertSee(route('business.home', $business->slug));
     }
 
     private function makeAdmin(): User
@@ -106,6 +151,14 @@ class SuperAdminBusinessWizardTest extends TestCase
                 'email' => 'wizard-owner@example.com',
                 'password' => 'Password123!',
                 'password_confirmation' => 'Password123!',
+            ],
+            'setup' => [
+                'services' => [
+                    ['name' => 'Classic cut', 'price' => 100, 'duration_minutes' => 30],
+                ],
+                'staff' => [
+                    ['name' => 'Initial Barber', 'phone' => '+506 8888-0000'],
+                ],
             ],
             'features' => [
                 'show_staff' => '1',

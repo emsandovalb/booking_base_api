@@ -15,6 +15,17 @@ class WebLoginTest extends TestCase
         $this->get('/login')->assertOk()->assertSee('Acceso Super Admin');
     }
 
+    public function test_web_login_is_not_the_mobile_api_login_endpoint(): void
+    {
+        $this->get('/login')->assertOk()->assertSee('Acceso Super Admin');
+
+        $this->postJson('/api/v1/auth/login', [
+            'email' => 'missing@example.com',
+            'password' => 'wrong-password',
+        ])->assertUnprocessable()
+            ->assertJsonValidationErrors('email');
+    }
+
     public function test_admin_can_log_in_and_reach_super_admin(): void
     {
         $user = User::factory()->create([

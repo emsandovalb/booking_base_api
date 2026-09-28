@@ -11,6 +11,7 @@ use App\Models\StaffService;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class BarbershopDemoSeeder extends Seeder
 {
@@ -389,6 +390,52 @@ class BarbershopDemoSeeder extends Seeder
                     array_values($serviceModels),
                 ))
                 ->update(['business_id' => $tresAmigosBusiness?->id]);
+        }
+
+        // Future appointments make the tenant dashboards immediately useful in a sales demo.
+        if ($tresAmigosBusiness && !empty($serviceModels)) {
+            $demoService = $serviceModels['Corte de cabello'];
+            $demoStaff = Staff::query()->where('business_id', $tresAmigosBusiness->id)->where('name', 'Carlos Ramírez')->first();
+            if ($demoStaff) {
+                Booking::updateOrCreate(['booking_code' => 'DEMO-TA1'], [
+                    'user_id' => null,
+                    'customer_name' => 'Miguel Demo',
+                    'customer_phone' => '+506 8888-2020',
+                    'customer_email' => null,
+                    'court_id' => $demoService->id,
+                    'business_id' => $tresAmigosBusiness->id,
+                    'staff_id' => $demoStaff->id,
+                    'date' => now()->addDay()->setTime(10, 0),
+                    'time_slot' => '10:00 AM to 10:45 AM',
+                    'duration_hours' => 1,
+                    'duration_minutes' => 45,
+                    'status' => 'pending',
+                    'public_token' => (string) Str::uuid(),
+                    'total_price' => $demoService->price_per_hour,
+                ]);
+            }
+        }
+
+        if ($salonAuroraBusiness ?? null) {
+            $demoStaff = Staff::query()->where('business_id', $salonAuroraBusiness->id)->first();
+            if (($salonService ?? null) && $demoStaff) {
+                Booking::updateOrCreate(['booking_code' => 'DEMO-SA1'], [
+                    'user_id' => null,
+                    'customer_name' => 'Laura Demo',
+                    'customer_phone' => '+506 7000-2020',
+                    'customer_email' => null,
+                    'court_id' => $salonService->id,
+                    'business_id' => $salonAuroraBusiness->id,
+                    'staff_id' => $demoStaff->id,
+                    'date' => now()->addDay()->setTime(11, 0),
+                    'time_slot' => '11:00 AM to 11:30 AM',
+                    'duration_hours' => 1,
+                    'duration_minutes' => 30,
+                    'status' => 'confirmed',
+                    'public_token' => (string) Str::uuid(),
+                    'total_price' => $salonService->price_per_hour,
+                ]);
+            }
         }
     }
 }

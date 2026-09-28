@@ -21,6 +21,18 @@
 @endsection
 
 @section('content')
+    @php
+        $publicBookingUrl = route('booking.public', $business->slug);
+        $ownerPwaUrl = route('business.home', $business->slug);
+        $launchChecks = [
+            'Tenant active' => $business->status === 'active',
+            'Owner account ready' => $business->users->contains(fn ($user) => $user->pivot?->role === 'owner' && $user->pivot?->status === 'active'),
+            'Service catalog ready' => ($business->services_count ?? 0) > 0,
+            'Staff ready' => ($business->staff_count ?? 0) > 0,
+            'Weekly hours configured' => filled(data_get($business->metadata, 'onboarding.weekly_schedule')),
+            'Brand identity configured' => filled(data_get($business->app_config, 'identity.app_name')),
+        ];
+    @endphp
     <style>
         .workspace-shell {
             display: grid;
@@ -219,6 +231,54 @@
             scroll-margin-top: 24px;
         }
 
+        .handoff-links {
+            display: grid;
+            gap: 10px;
+        }
+
+        .handoff-link {
+            display: grid;
+            grid-template-columns: 140px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.03);
+        }
+
+        .handoff-link code {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--text);
+        }
+
+        .launch-checks {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .launch-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 13px;
+            border-radius: 14px;
+            border: 1px solid rgba(52, 211, 153, 0.28);
+            background: rgba(52, 211, 153, 0.08);
+            color: #bbf7d0;
+            font-size: 13px;
+        }
+
+        .launch-check.pending {
+            border-color: rgba(251, 191, 36, 0.28);
+            background: rgba(251, 191, 36, 0.08);
+            color: #fde68a;
+        }
+
         @media (max-width: 1100px) {
             .workspace-shell,
             .workspace-grid-4,
@@ -248,6 +308,11 @@
 
             .info-value {
                 text-align: left;
+            }
+
+            .handoff-link,
+            .launch-checks {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -290,6 +355,26 @@
                         <span class="meta-pill">Created: {{ $business->created_at?->format('d M Y') ?? 'N/A' }}</span>
                         <span class="meta-pill">Members: {{ $business->members_count ?? 0 }}</span>
                     </div>
+                </div>
+            </section>
+
+            <section class="card workspace-card" id="launch-handoff">
+                <div class="eyebrow">First-customer handoff</div>
+                <h3>Booking links are ready</h3>
+                <p>Use these tenant-specific links for the final phone test, QR/share handoff, and owner installation.</p>
+                <div class="handoff-links" style="margin-top: 16px;">
+                    <div class="handoff-link"><strong>Customer booking</strong><code id="publicBookingUrl">{{ $publicBookingUrl }}</code><button class="button" type="button" onclick="copyHandoff('publicBookingUrl', this)">Copy</button></div>
+                    <div class="handoff-link"><strong>Owner PWA</strong><code id="ownerPwaUrl">{{ $ownerPwaUrl }}</code><button class="button" type="button" onclick="copyHandoff('ownerPwaUrl', this)">Copy</button></div>
+                </div>
+                <div class="toolbar" style="margin-top: 14px;">
+                    <a class="button" target="_blank" href="{{ $publicBookingUrl }}">Test public booking</a>
+                    <a class="button ghost" target="_blank" href="{{ $ownerPwaUrl }}">Open owner PWA</a>
+                    <a class="button ghost" target="_blank" href="{{ route('pwa.manifest', ['experience' => 'app', 'slug' => $business->slug]) }}">Check manifest</a>
+                </div>
+                <div class="launch-checks">
+                    @foreach ($launchChecks as $label => $ready)
+                        <div class="launch-check {{ $ready ? '' : 'pending' }}"><strong>{{ $ready ? 'Ready' : 'Check' }}</strong><span>{{ $label }}</span></div>
+                    @endforeach
                 </div>
             </section>
 
@@ -587,4 +672,12 @@
             </section>
         </div>
     </section>
+    <script>
+        async function copyHandoff(id, button) {
+            await navigator.clipboard.writeText(document.getElementById(id).textContent.trim());
+            const original = button.textContent;
+            button.textContent = 'Copied';
+            setTimeout(() => button.textContent = original, 1200);
+        }
+    </script>
 @endsection

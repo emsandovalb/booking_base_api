@@ -37,6 +37,19 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
+        // A customer who signs up from a tenant-branded app belongs to that
+        // business as a client. This grants no operational privileges, but
+        // makes the tenant context explicit in /auth/me and the UI.
+        if ($business = $context->currentBusiness()) {
+            $business->users()->syncWithoutDetaching([
+                $user->id => [
+                    'role' => 'client',
+                    'status' => 'active',
+                    'accepted_at' => now(),
+                ],
+            ]);
+        }
+
         $token = $user->createToken('mobile')->plainTextToken;
 
         return response()->json([
