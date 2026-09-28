@@ -22,7 +22,7 @@
     $previewBackground = $colors['background'] ?? '#090909';
     $previewSurface = $colors['surface'] ?? '#151C31';
     $previewCard = $colors['card'] ?? '#10172A';
-    $previewBorder = $colors['border'] ?? '#22FFFFFF';
+    $previewBorder = $colors['border'] ?? 'rgba(255,255,255,0.13)';
     $previewText = $colors['text_primary'] ?? '#F5F7FB';
     $previewSecondaryText = $colors['text_secondary'] ?? '#94A3B8';
     $previewInputBackground = $colors['input_background'] ?? $previewSurface;
@@ -282,6 +282,247 @@
             top: 0;
         }
     }
+
+    /* Phone mockup: same Login/Home preview as the business creation
+       wizard, but colors come from this page's own preset/palette engine
+       (--preview-*) instead of raw brand[...] fields. */
+    .brand-preview-tabs {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+        margin-bottom: 12px;
+    }
+
+    .brand-preview-tab {
+        border: 1px solid var(--preview-border, rgba(255, 255, 255, 0.12));
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--preview-secondary-text, #94a3b8);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 6px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+    }
+
+    .brand-preview-tab.active {
+        background: rgba(244, 198, 106, 0.16);
+        border-color: rgba(244, 198, 106, 0.4);
+        color: var(--preview-text, #f5f7fb);
+    }
+
+    .brand-preview-phone {
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        border-radius: 28px;
+        padding: 10px;
+        background: #05070d;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .brand-preview-screen {
+        position: relative;
+        background: var(--preview-background, #07111f) center / cover no-repeat;
+        color: var(--preview-text, #f5f7fb);
+        border-radius: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        min-height: 480px;
+        font-family: inherit;
+        transition: background-color .15s ease, color .15s ease;
+    }
+
+    .brand-preview-hero-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(5,5,5,.55), rgba(9,9,9,.35), rgba(5,5,5,.68));
+        display: none;
+        pointer-events: none;
+    }
+
+    .brand-preview-hero-overlay.visible { display: block; }
+
+    .brand-preview-panel {
+        position: relative;
+        display: none;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .brand-preview-panel.active { display: flex; }
+
+    .brand-preview-topspace { height: 18px; }
+
+    .brand-preview-logo-wrap {
+        display: flex;
+        justify-content: center;
+        padding: 6px 0 10px;
+    }
+
+    .brand-preview-logo {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--preview-primary, #d4a84f);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 20px;
+        color: var(--preview-primary-text, #090909);
+        overflow: hidden;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+    }
+
+    .brand-preview-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .brand-preview-card {
+        margin: 4px 14px 14px;
+        padding: 16px 14px;
+        border-radius: 16px;
+        background: var(--preview-card, rgba(255, 255, 255, 0.06));
+        border: 1px solid var(--preview-border, rgba(255, 255, 255, 0.10));
+    }
+
+    .brand-preview-name {
+        font-weight: 800;
+        font-size: 15px;
+        text-align: center;
+        color: var(--preview-primary, #d4a84f);
+        margin-bottom: 2px;
+        overflow-wrap: anywhere;
+    }
+
+    .brand-preview-tagline {
+        font-size: 11px;
+        text-align: center;
+        color: var(--preview-secondary-text, #94a3b8);
+        margin-bottom: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    .brand-preview-input {
+        background: var(--preview-input-bg, rgba(255, 255, 255, 0.07));
+        border: 1px solid var(--preview-border, rgba(255, 255, 255, 0.10));
+        border-radius: 10px;
+        padding: 9px 10px;
+        font-size: 11px;
+        color: var(--preview-placeholder, #94a3b8);
+        margin-bottom: 8px;
+    }
+
+    .brand-preview-button {
+        margin-top: 4px;
+        background: var(--preview-primary, #d4a84f);
+        color: var(--preview-primary-text, #090909);
+        text-align: center;
+        font-weight: 700;
+        font-size: 12px;
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+    .brand-preview-navbar {
+        margin-top: auto;
+        display: flex;
+        border-top: 1px solid var(--preview-border, rgba(255, 255, 255, 0.08));
+        padding: 10px 4px 14px;
+    }
+
+    .brand-preview-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        font-size: 9px;
+        color: var(--preview-secondary-text, #94a3b8);
+    }
+
+    .brand-preview-nav-item.active {
+        color: var(--preview-primary, #d4a84f);
+        font-weight: 700;
+    }
+
+    .brand-preview-nav-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .brand-preview-home-header {
+        padding: 16px 14px 10px;
+        background: var(--preview-primary, #d4a84f);
+    }
+
+    .brand-preview-home-greeting {
+        font-size: 10px;
+        font-weight: 700;
+        opacity: .85;
+        color: var(--preview-primary-text, #090909);
+    }
+
+    .brand-preview-home-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--preview-primary-text, #090909);
+    }
+
+    .brand-preview-home-search {
+        margin: 12px 14px 0;
+        padding: 9px 12px;
+        border-radius: 10px;
+        background: var(--preview-input-bg, rgba(255, 255, 255, 0.08));
+        border: 1px solid var(--preview-border, rgba(255, 255, 255, 0.12));
+        font-size: 11px;
+        color: var(--preview-placeholder, #94a3b8);
+    }
+
+    .brand-preview-home-section-title {
+        margin: 16px 14px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--preview-secondary-text, #94a3b8);
+    }
+
+    .brand-preview-home-cards {
+        margin: 0 14px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .brand-preview-home-card {
+        background: var(--preview-card, rgba(255, 255, 255, 0.06));
+        border: 1px solid var(--preview-border, rgba(255, 255, 255, 0.08));
+        border-radius: 12px;
+        overflow: hidden;
+        padding-bottom: 8px;
+    }
+
+    .brand-preview-home-card-thumb {
+        height: 52px;
+        background: linear-gradient(135deg, var(--preview-primary, #d4a84f), var(--preview-accent, #e8c36a));
+    }
+
+    .brand-preview-home-card-name {
+        font-size: 10.5px;
+        font-weight: 700;
+        margin: 6px 8px 2px;
+        color: var(--preview-text, #f5f7fb);
+    }
+
+    .brand-preview-home-card-price {
+        font-size: 10px;
+        color: var(--preview-secondary-text, #94a3b8);
+        margin: 0 8px;
+    }
 </style>
 
 <form method="POST" action="{{ $action }}" data-branding-form>
@@ -470,33 +711,69 @@
 
             <aside class="branding-preview" data-branding-preview-root>
                 <div class="branding-preview__inner">
-                    <div class="branding-preview__eyebrow">Vista previa en vivo</div>
-                    <div class="branding-preview__hero">
-                        <div class="branding-preview__mark" data-preview-mark>{{ $previewShortName }}</div>
-                        <div>
-                            <h3 class="branding-preview__title" data-preview-display-name>{{ $previewDisplayName }}</h3>
-                            <p class="branding-preview__subtitle" data-preview-tagline>{{ $previewTagline ?: $previewSubtitle }}</p>
-                            <p class="branding-preview__meta" data-preview-location>{{ $previewLocation }}</p>
-                        </div>
+                    <div class="branding-preview__eyebrow">Vista previa en vivo — asi se veria la app</div>
+
+                    <div class="brand-preview-tabs">
+                        <button type="button" class="brand-preview-tab active" data-preview-tab="login">Login</button>
+                        <button type="button" class="brand-preview-tab" data-preview-tab="home">Home</button>
                     </div>
 
-                    <div class="branding-preview__panel">
-                        <div class="branding-preview__search" data-preview-search>
-                            <span>Buscar servicios, citas o staff</span>
-                        </div>
+                    <div class="brand-preview-phone">
+                        <div class="brand-preview-screen" data-preview-screen>
+                            <div class="brand-preview-hero-overlay" data-preview-hero-overlay></div>
 
-                        <div class="branding-preview__card" data-preview-card>
-                            <div class="branding-preview__card-label">Ejemplo de tarjeta</div>
-                            <div class="branding-preview__secondary" data-preview-secondary>
-                                {{ $previewDisplayName }} se ve aqui con fondo, superficie y bordes sincronizados al tema.
+                            <div class="brand-preview-panel active" data-preview-panel="login">
+                                <div class="brand-preview-topspace"></div>
+                                <div class="brand-preview-logo-wrap">
+                                    <div class="brand-preview-logo" data-preview-logo>
+                                        <img data-preview-logo-img hidden alt="">
+                                        <span data-preview-mark>{{ $previewShortName }}</span>
+                                    </div>
+                                </div>
+                                <div class="brand-preview-card">
+                                    <div class="brand-preview-name" data-preview-display-name>{{ $previewDisplayName }}</div>
+                                    <div class="brand-preview-tagline" data-preview-tagline>{{ $previewTagline ?: $previewSubtitle }}</div>
+                                    <div class="brand-preview-input">Correo electronico</div>
+                                    <div class="brand-preview-input">Contrasena</div>
+                                    <div class="brand-preview-button">Iniciar sesion</div>
+                                </div>
                             </div>
-                            <button type="button" class="branding-preview__button" data-preview-cta>Reservar ahora</button>
-                        </div>
 
-                        <div class="branding-preview__swatches">
-                            <div class="branding-preview__swatch" data-preview-swatch="background">Background</div>
-                            <div class="branding-preview__swatch" data-preview-swatch="surface">Surface</div>
-                            <div class="branding-preview__swatch" data-preview-swatch="card">Card</div>
+                            <div class="brand-preview-panel" data-preview-panel="home">
+                                <div class="brand-preview-home-header">
+                                    <div class="brand-preview-home-greeting">Hola, Cliente</div>
+                                    <div class="brand-preview-home-title">Buenos dias</div>
+                                </div>
+                                <div class="brand-preview-home-search">Buscar servicios...</div>
+                                <div class="brand-preview-home-section-title">Servicios populares</div>
+                                <div class="brand-preview-home-cards">
+                                    <div class="brand-preview-home-card">
+                                        <div class="brand-preview-home-card-thumb"></div>
+                                        <div class="brand-preview-home-card-name">Servicio</div>
+                                        <div class="brand-preview-home-card-price">&mdash;</div>
+                                    </div>
+                                    <div class="brand-preview-home-card">
+                                        <div class="brand-preview-home-card-thumb"></div>
+                                        <div class="brand-preview-home-card-name">Servicio</div>
+                                        <div class="brand-preview-home-card-price">&mdash;</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="brand-preview-navbar">
+                                <div class="brand-preview-nav-item active">
+                                    <span class="brand-preview-nav-dot"></span>Inicio
+                                </div>
+                                <div class="brand-preview-nav-item">
+                                    <span class="brand-preview-nav-dot"></span>Servicios
+                                </div>
+                                <div class="brand-preview-nav-item">
+                                    <span class="brand-preview-nav-dot"></span>Reservas
+                                </div>
+                                <div class="brand-preview-nav-item">
+                                    <span class="brand-preview-nav-dot"></span>Perfil
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -619,15 +896,12 @@
         displayName: document.querySelector('[data-preview-display-name]'),
         shortName: document.querySelector('[data-preview-mark]'),
         tagline: document.querySelector('[data-preview-tagline]'),
-        location: document.querySelector('[data-preview-location]'),
-        secondary: document.querySelector('[data-preview-secondary]'),
-        cta: document.querySelector('[data-preview-cta]'),
     };
-    const swatches = {
-        background: document.querySelector('[data-preview-swatch="background"]'),
-        surface: document.querySelector('[data-preview-swatch="surface"]'),
-        card: document.querySelector('[data-preview-swatch="card"]'),
-    };
+    const previewScreen = document.querySelector('[data-preview-screen]');
+    const previewHeroOverlay = document.querySelector('[data-preview-hero-overlay]');
+    const previewLogoImg = document.querySelector('[data-preview-logo-img]');
+    const logoUrlInput = document.querySelector('[name="branding[assets][logo_transparent]"]');
+    const heroUrlInput = document.querySelector('[name="branding[assets][hero_background]"]');
 
     const presetPalettes = {
         elegant_light: {
@@ -644,7 +918,7 @@
             background: '#090909',
             surface: '#1A1512',
             card: '#120E0B',
-            border: '#22FFFFFF',
+            border: 'rgba(255,255,255,0.13)',
             textPrimary: '#FFFFFF',
             textSecondary: '#B9AFA5',
             textOnPrimary: '#090909',
@@ -664,7 +938,7 @@
             background: '#071719',
             surface: '#102528',
             card: '#0D1F22',
-            border: '#22FFFFFF',
+            border: 'rgba(255,255,255,0.13)',
             textPrimary: '#FFFFFF',
             textSecondary: '#C1DED9',
             textOnPrimary: '#071719',
@@ -674,7 +948,7 @@
             background: '#081425',
             surface: '#111C31',
             card: '#0F1829',
-            border: '#22FFFFFF',
+            border: 'rgba(255,255,255,0.13)',
             textPrimary: '#FFFFFF',
             textSecondary: '#C0D1E8',
             textOnPrimary: '#081425',
@@ -684,7 +958,7 @@
             background: '#090909',
             surface: '#1A1512',
             card: '#120E0B',
-            border: '#22FFFFFF',
+            border: 'rgba(255,255,255,0.13)',
             textPrimary: '#FFFFFF',
             textSecondary: '#B9AFA5',
             textOnPrimary: '#090909',
@@ -694,7 +968,7 @@
             background: '#081425',
             surface: '#111C31',
             card: '#0F1829',
-            border: '#22FFFFFF',
+            border: 'rgba(255,255,255,0.13)',
             textPrimary: '#FFFFFF',
             textSecondary: '#C0D1E8',
             textOnPrimary: '#081425',
@@ -828,19 +1102,8 @@
         root.style.setProperty('--preview-placeholder', palette.placeholder);
         root.style.setProperty('--preview-surface', palette.surface);
         root.style.setProperty('--preview-card', palette.card);
-
-        if (swatches.background) {
-            swatches.background.style.background = palette.background;
-            swatches.background.textContent = 'Background';
-        }
-        if (swatches.surface) {
-            swatches.surface.style.background = palette.surface;
-            swatches.surface.textContent = 'Surface';
-        }
-        if (swatches.card) {
-            swatches.card.style.background = palette.card;
-            swatches.card.textContent = 'Card';
-        }
+        root.style.setProperty('--preview-background', palette.background);
+        root.style.setProperty('--preview-accent', palette.accent);
     }
 
     function renderPreview() {
@@ -861,14 +1124,39 @@
             const subtitle = (document.querySelector('[data-preview-field="subtitle"]')?.value || '').trim();
             previewFields.tagline.textContent = tagline || subtitle || '';
         }
-        if (previewFields.location) {
-            previewFields.location.textContent = (document.querySelector('[data-preview-field="location_short"]')?.value || '').trim();
+    }
+
+    function syncLogoPreview() {
+        const url = (logoUrlInput?.value || '').trim();
+        if (!previewLogoImg) {
+            return;
         }
-        if (previewFields.secondary) {
-            previewFields.secondary.textContent = `${previewFields.displayName?.textContent || 'Marca'} se ve aqui con fondo, superficie y bordes sincronizados al tema.`;
+        if (url) {
+            previewLogoImg.onerror = function () {
+                previewLogoImg.hidden = true;
+                if (previewFields.shortName) previewFields.shortName.hidden = false;
+            };
+            previewLogoImg.src = url;
+            previewLogoImg.hidden = false;
+            if (previewFields.shortName) previewFields.shortName.hidden = true;
+        } else {
+            previewLogoImg.hidden = true;
+            previewLogoImg.removeAttribute('src');
+            if (previewFields.shortName) previewFields.shortName.hidden = false;
         }
-        if (previewFields.cta) {
-            previewFields.cta.textContent = 'Reservar ahora';
+    }
+
+    function syncHeroPreview() {
+        const url = (heroUrlInput?.value || '').trim();
+        if (!previewScreen) {
+            return;
+        }
+        if (url) {
+            previewScreen.style.backgroundImage = `url("${url.replace(/"/g, '%22')}")`;
+            if (previewHeroOverlay) previewHeroOverlay.classList.add('visible');
+        } else {
+            previewScreen.style.backgroundImage = '';
+            if (previewHeroOverlay) previewHeroOverlay.classList.remove('visible');
         }
     }
 
@@ -885,6 +1173,30 @@
         input.addEventListener('change', renderPreview);
     });
 
+    if (logoUrlInput) {
+        logoUrlInput.addEventListener('input', syncLogoPreview);
+        logoUrlInput.addEventListener('change', syncLogoPreview);
+    }
+
+    if (heroUrlInput) {
+        heroUrlInput.addEventListener('input', syncHeroPreview);
+        heroUrlInput.addEventListener('change', syncHeroPreview);
+    }
+
+    document.querySelectorAll('[data-preview-tab]').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            const target = tab.dataset.previewTab;
+            document.querySelectorAll('[data-preview-tab]').forEach(function (t) {
+                t.classList.toggle('active', t === tab);
+            });
+            document.querySelectorAll('[data-preview-panel]').forEach(function (panel) {
+                panel.classList.toggle('active', panel.dataset.previewPanel === target);
+            });
+        });
+    });
+
     renderPreview();
+    syncLogoPreview();
+    syncHeroPreview();
 })();
 </script>

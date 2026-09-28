@@ -2,14 +2,22 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Event;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(LanguageSeeder::class);
+
+        if (! app()->environment(['local', 'testing'])) {
+            $this->command?->warn('Demo businesses and known-password users were skipped outside local/testing.');
+
+            return;
+        }
+
         // `role: admin` here is NOT a super-admin grant — it only still
         // matters for Tournament/Event/Team management, which hasn't been
         // migrated off the legacy global role yet (tracked separately).
@@ -45,6 +53,5 @@ class DatabaseSeeder extends Seeder
 
         $this->call(BusinessSeeder::class);
         $this->call(BarbershopDemoSeeder::class);
-        $this->call(LanguageSeeder::class);
     }
 }

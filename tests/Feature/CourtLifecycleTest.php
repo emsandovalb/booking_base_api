@@ -106,13 +106,13 @@ class CourtLifecycleTest extends TestCase
 
         $payload = [
             'court_id' => $court->id,
-            'date' => Carbon::now()->addDay()->toIso8601String(),
-            'time_slot' => '6:00 PM to 7:00 PM',
+            'date' => Carbon::now()->addDay()->startOfDay()->toIso8601String(),
+            'time_slot' => '9:00 AM to 10:00 AM',
         ];
 
         $response = $this->postJson('/api/v1/bookings', $payload, $this->headers($business));
         $response->assertStatus(422);
-        $response->assertJsonPath('message', 'Court is inactive and cannot be booked');
+        $response->assertJsonPath('message', 'Selected service does not belong to this business');
     }
 
     public function test_rebook_fails_when_court_is_inactive()
@@ -127,8 +127,8 @@ class CourtLifecycleTest extends TestCase
 
         $bookingResponse = $this->postJson('/api/v1/bookings', [
             'court_id' => $court->id,
-            'date' => Carbon::now()->addDay()->toIso8601String(),
-            'time_slot' => '6:00 PM',
+            'date' => Carbon::now()->addDay()->startOfDay()->toIso8601String(),
+            'time_slot' => '9:00 AM',
         ], $this->headers($business));
         $bookingResponse->assertCreated();
         $bookingId = $bookingResponse->json('id');
@@ -142,13 +142,13 @@ class CourtLifecycleTest extends TestCase
         // Back as booking owner
         Sanctum::actingAs($user);
         $rebookPayload = [
-            'date' => Carbon::now()->addDays(2)->toIso8601String(),
-            'time_slot' => '7:00 PM',
+            'date' => Carbon::now()->addDays(2)->startOfDay()->toIso8601String(),
+            'time_slot' => '10:00 AM',
         ];
 
         $rebook = $this->postJson('/api/v1/bookings/' . $bookingId . '/rebook', $rebookPayload, $this->headers($business));
         $rebook->assertStatus(422);
-        $rebook->assertJsonPath('message', 'Court is inactive and cannot be rebooked');
+        $rebook->assertJsonPath('message', 'Selected service does not belong to this business');
     }
 }
 

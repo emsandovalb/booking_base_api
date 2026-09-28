@@ -46,13 +46,16 @@ class BookingDurationTest extends TestCase
     {
         $user = User::factory()->create();
         $business = $this->createBusiness();
-        $court = Court::factory()->create(['business_id' => $business->id]);
+        // Duration is derived from the service's own configuration, never
+        // from client input (a client-submitted duration would let it claim
+        // a shorter/longer slot than the service actually occupies) — so a
+        // 2-hour booking requires a service actually configured for 2 hours.
+        $court = Court::factory()->create(['business_id' => $business->id, 'duration_hours' => 2]);
 
         $payload = [
             'court_id' => $court->id,
-            'date' => Carbon::now()->addDay()->toIso8601String(),
-            'time_slot' => '6:00 PM to 7:00 PM',
-            'duration_hours' => 2,
+            'date' => Carbon::now()->addDay()->startOfDay()->toIso8601String(),
+            'time_slot' => '9:00 AM to 11:00 AM',
         ];
 
         $response = $this->postJson('/api/v1/bookings', $payload, $this->authHeaders($user, $business));
@@ -74,8 +77,8 @@ class BookingDurationTest extends TestCase
 
         $payload = [
             'court_id' => $court->id,
-            'date' => Carbon::now()->addDay()->toIso8601String(),
-            'time_slot' => '6:00 PM',
+            'date' => Carbon::now()->addDay()->startOfDay()->toIso8601String(),
+            'time_slot' => '9:00 AM',
         ];
 
         $response = $this->postJson('/api/v1/bookings', $payload, $this->authHeaders($user, $business));
@@ -159,14 +162,17 @@ class BookingDurationTest extends TestCase
     {
         $user = User::factory()->create();
         $business = $this->createBusiness();
-        $court = Court::factory()->create(['business_id' => $business->id]);
+        // Duration comes from the service's own configuration on rebook too
+        // (never from the original booking's stored value), so the service
+        // itself needs the matching duration for this assertion to hold.
+        $court = Court::factory()->create(['business_id' => $business->id, 'duration_hours' => 3]);
 
         $original = Booking::create([
             'user_id' => $user->id,
             'court_id' => $court->id,
             'business_id' => $business->id,
-            'date' => Carbon::now()->addDays(2),
-            'time_slot' => '6:00 PM',
+            'date' => Carbon::now()->addDays(2)->setTime(9, 0),
+            'time_slot' => '9:00 AM',
             'duration_hours' => 3,
             'status' => 'pending',
             'booking_code' => 'ORIG01',
@@ -176,8 +182,8 @@ class BookingDurationTest extends TestCase
         $this->assertNotNull($original->id);
 
         $payload = [
-            'date' => Carbon::now()->addDays(3)->toIso8601String(),
-            'time_slot' => '7:00 PM',
+            'date' => Carbon::now()->addDays(3)->startOfDay()->toIso8601String(),
+            'time_slot' => '10:00 AM',
         ];
 
         $response = $this->postJson(

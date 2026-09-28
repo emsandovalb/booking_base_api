@@ -37,7 +37,7 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->route('super-admin.dashboard');
+        return redirect()->intended(route('super-admin.dashboard'));
     }
 
     public function destroy(Request $request)

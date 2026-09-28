@@ -1,63 +1,72 @@
-## Booking Base API
+# Bemuss Booking SaaS
 
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+Laravel booking platform with tenant-isolated public booking pages and installable owner PWAs.
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Product routes
 
-## About Laravel
+- Customer booking: `/b/{business-slug}` — public, no account or installation required.
+- Owner PWA: `/app/{business-slug}` — authenticated business agenda and management.
+- Super Admin onboarding: `/super-admin/businesses/create`.
+- Tenant manifest: `/app/{business-slug}/manifest.webmanifest`.
+- Service worker: `/service-worker.js`.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Local setup
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate:fresh --seed
+php artisan storage:link
+npm run build
+php artisan serve --host=0.0.0.0 --port=8000
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Local demo credentials and URLs are documented in [docs/SAAS_PWA_MVP.md](docs/SAAS_PWA_MVP.md). Demo users, businesses, bookings, and known passwords are seeded only in `local` and `testing`; `DatabaseSeeder` skips them in every other environment.
 
-## Learning Laravel
+To configure the guarded repository-local QA logins without resetting the database, follow [docs/LOCAL_QA_CREDENTIALS.md](docs/LOCAL_QA_CREDENTIALS.md).
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Flutter Web CORS
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Flutter Web development uses a dynamic browser port. For repository-local QA, set `CORS_ALLOW_LOCALHOST=true` to allow only `http://localhost:<port>` and `http://127.0.0.1:<port>` origins. Keep that flag false in deployed environments.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Production browser origins must be listed explicitly with `FRONTEND_URL` or a comma-separated `FRONTEND_URLS`; unrestricted `*` origins are not used. After changing CORS environment values in a cached environment, run `php artisan config:clear` during development or rebuild the production configuration cache.
 
-## Laravel Sponsors
+## First real customer
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Use the [15-minute barber shop onboarding runbook](docs/FIRST_BARBERSHOP_ONBOARDING.md). The current wizard provisions, in one transaction:
 
-### Premium Partners
+- Tenant and owner membership.
+- Business identity, uploaded logo, colors, and contact information.
+- Day-specific working hours.
+- Initial services, prices, and durations.
+- Initial staff and service assignments.
+- Tenant-specific public booking and owner PWA handoff URLs.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Complete [real-device verification](docs/REAL_DEVICE_VERIFICATION.md) on the production HTTPS origin before handing the links to the owner.
 
-## Contributing
+## Production baseline
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Set `APP_ENV=production`, `APP_DEBUG=false`, a strong `APP_KEY`, and the exact HTTPS `APP_URL`. Configure persistent database/cache drivers, trusted proxy forwarding, mail delivery, backups, and HTTPS before onboarding.
 
-## Code of Conduct
+```bash
+php artisan migrate --force
+php artisan storage:link
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan test
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Do not run demo seed classes in production. Create the initial platform administrator with `BootstrapAdminSeeder` and environment-provided credentials as described in `.env.example`.
 
-## Security Vulnerabilities
+## Validation
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+vendor/bin/pint --test
+npm run build
+php artisan test
+```
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+See [docs/SAAS_PWA_MVP.md](docs/SAAS_PWA_MVP.md) for architecture, installability requirements, and the complete smoke test.

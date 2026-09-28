@@ -6,14 +6,47 @@ use App\Http\Controllers\SuperAdmin\BusinessController;
 use App\Http\Controllers\SuperAdmin\BusinessMemberController;
 use App\Http\Controllers\SuperAdmin\DashboardController;
 use App\Http\Controllers\SuperAdmin\WorkspaceController;
+use App\Http\Controllers\Web\BusinessAppController;
+use App\Http\Controllers\Web\PublicBookingController;
+use App\Http\Controllers\Web\PwaController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/offline', fn () => view('pwa.offline'))->name('pwa.offline');
+Route::get('/service-worker.js', [PwaController::class, 'serviceWorker'])->name('pwa.service-worker');
+Route::get('/pwa/{slug}/icon-{size}.svg', [PwaController::class, 'icon'])->whereNumber('size')->name('pwa.icon');
+Route::get('/{experience}/{slug}/manifest.webmanifest', [PwaController::class, 'manifest'])
+    ->whereIn('experience', ['b', 'app'])->name('pwa.manifest');
+
+Route::prefix('b/{slug}')->group(function () {
+    Route::get('/', [PublicBookingController::class, 'show'])->name('booking.public');
+    Route::get('/availability', [PublicBookingController::class, 'availability'])->name('booking.availability');
+    Route::post('/book', [PublicBookingController::class, 'store'])->middleware('throttle:20,1')->name('booking.store');
+    Route::get('/confirmed/{token}', [PublicBookingController::class, 'confirmed'])
+        ->middleware('signed')->name('booking.confirmed');
+});
+
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:login')->name('login.store');
 Route::post('/logout', [LoginController::class, 'destroy'])->middleware('auth')->name('logout');
+
+Route::prefix('app/{slug}')->middleware('auth')->name('business.')->group(function () {
+    Route::get('/', [BusinessAppController::class, 'home'])->name('home');
+    Route::get('/agenda', [BusinessAppController::class, 'agenda'])->name('agenda');
+    Route::get('/bookings/{bookingId}', [BusinessAppController::class, 'booking'])->name('bookings.show');
+    Route::post('/bookings/{bookingId}/{action}', [BusinessAppController::class, 'transition'])
+        ->whereIn('action', ['confirm', 'cancel'])->name('bookings.transition');
+    Route::post('/bookings/{bookingId}/reschedule', [BusinessAppController::class, 'reschedule'])->name('bookings.reschedule');
+    Route::get('/services', [BusinessAppController::class, 'services'])->name('services');
+    Route::post('/services', [BusinessAppController::class, 'storeService'])->name('services.store');
+    Route::put('/services/{service}', [BusinessAppController::class, 'updateService'])->name('services.update');
+    Route::get('/staff', [BusinessAppController::class, 'staff'])->name('staff');
+    Route::post('/staff', [BusinessAppController::class, 'storeStaff'])->name('staff.store');
+    Route::patch('/staff/{staff}/toggle', [BusinessAppController::class, 'toggleStaff'])->name('staff.toggle');
+    Route::get('/share', [BusinessAppController::class, 'share'])->name('share');
+});
 
 /*
 |--------------------------------------------------------------------------

@@ -120,7 +120,7 @@ class BookingConcurrencyTest extends TestCase
         ], $this->headers($business));
 
         $response->assertStatus(422);
-        $response->assertJsonPath('message', 'Time slot already booked');
+        $response->assertJsonPath('message', 'Time slot is no longer available');
         $this->assertDatabaseCount('bookings', 1);
         $this->assertDatabaseHas('bookings', ['id' => $bookingA->id]);
     }
@@ -225,7 +225,7 @@ class BookingConcurrencyTest extends TestCase
             $response->assertStatus(409);
             $response->assertJsonPath(
                 'message',
-                'This slot is currently being booked by someone else. Please try again.'
+                'This slot is currently being booked. Please try again.'
             );
         } finally {
             $lock->release();

@@ -74,8 +74,12 @@ class ReservationStaffSelectionTest extends TestCase
 
         $response = $this->postJson('/api/v1/bookings', [
             'court_id' => $court->id,
-            'date' => Carbon::now()->addDay()->toIso8601String(),
-            'time_slot' => '6:00 PM to 7:00 PM',
+            // Midnight date + time_slot label: startFrom() only derives the
+            // real appointment time from time_slot when date has no time
+            // component of its own — matches what the availability endpoint
+            // returns and what real clients send.
+            'date' => Carbon::now()->addDay()->startOfDay()->toIso8601String(),
+            'time_slot' => '9:00 AM to 10:00 AM',
         ], $this->headers($business));
 
         $response->assertCreated();
@@ -98,8 +102,8 @@ class ReservationStaffSelectionTest extends TestCase
         $response = $this->postJson('/api/v1/bookings', [
             'court_id' => $court->id,
             'staff_id' => $staff->id,
-            'date' => Carbon::now()->addDay()->toIso8601String(),
-            'time_slot' => '6:00 PM to 7:00 PM',
+            'date' => Carbon::now()->addDay()->startOfDay()->toIso8601String(),
+            'time_slot' => '9:00 AM to 10:00 AM',
         ], $this->headers($business));
 
         $response->assertCreated();
@@ -122,7 +126,7 @@ class ReservationStaffSelectionTest extends TestCase
         $created = $this->postJson('/api/v1/reservations', [
             'resource_id' => $court->id,
             'staff_id' => (string) $carlos->id,
-            'date' => Carbon::now()->addDays(2)->toIso8601String(),
+            'date' => Carbon::now()->addDays(2)->startOfDay()->toIso8601String(),
             'time_slot' => '10:00 AM to 11:00 AM',
         ], $this->headers($business))->assertCreated()
             ->assertJsonPath('staff_id', $carlos->id)

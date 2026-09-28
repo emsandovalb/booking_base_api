@@ -64,6 +64,34 @@ class AdminBookingTransitionTest extends TestCase
         $this->assertDatabaseHas('bookings', ['id' => $confirmed->id, 'status' => 'cancelled']);
     }
 
+    public function test_business_admin_can_complete_a_confirmed_booking_once_its_time_has_passed(): void
+    {
+        [$admin, $business, $booking] = $this->bookingForBusinessAdmin('admin', 'confirmed', now()->subHour());
+        Sanctum::actingAs($admin);
+
+        $this->postJson("/api/v1/reservations/{$booking->id}/complete", [], $this->headers($business))
+            ->assertOk()
+            ->assertJsonPath('status', 'completed');
+
+        $this->assertDatabaseHas('bookings', ['id' => $booking->id, 'status' => 'completed']);
+    }
+
+    public function test_completing_a_confirmed_booking_before_its_scheduled_time_is_rejected(): void
+    {
+        // Completing frees the staff member's slot for new bookings, so
+        // doing it before the appointment has actually happened would let
+        // someone else book the same staff member for a time that hasn't
+        // occurred yet.
+        [$admin, $business, $booking] = $this->bookingForBusinessAdmin('admin', 'confirmed', now()->addDay());
+        Sanctum::actingAs($admin);
+
+        $this->postJson("/api/v1/reservations/{$booking->id}/complete", [], $this->headers($business))
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Cannot mark a reservation completed before its scheduled time');
+
+        $this->assertDatabaseHas('bookings', ['id' => $booking->id, 'status' => 'confirmed']);
+    }
+
     public function test_admin_from_another_business_cannot_transition_a_booking(): void
     {
         [, $business, $booking] = $this->bookingForBusinessAdmin('owner');
