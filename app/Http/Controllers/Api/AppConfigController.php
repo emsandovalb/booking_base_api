@@ -11,17 +11,24 @@ use Illuminate\Support\Arr;
 
 class AppConfigController extends Controller
 {
-    public function showDefault(): JsonResponse
+    /**
+     * Branding is read on every app start but changes rarely, so successful
+     * responses carry an ETag and a short public max-age. Clients that send
+     * the ETag back get an empty 304, and edits show up within a minute.
+     */
+    private const CACHE_MAX_AGE_SECONDS = 60;
+
+    public function showDefault(Request $request): JsonResponse
     {
         $config = BrandingConfig::basePreset();
 
-        return response()->json($config + [
+        return $this->cacheable($request, response()->json($config + [
             'business_type' => 'generic',
             'api_base_url' => url('/api/v1'),
-        ]);
+        ]));
     }
 
-    public function showForBusinessSlug(string $slug): JsonResponse
+    public function showForBusinessSlug(Request $request, string $slug): JsonResponse
     {
         $business = Business::resolveBySlug($slug);
 
@@ -31,7 +38,7 @@ class AppConfigController extends Controller
             ], 404);
         }
 
-        return response()->json($this->resolveConfigForBusiness($business));
+        return $this->cacheable($request, response()->json($this->resolveConfigForBusiness($business)));
     }
 
     public function showPublicBusinessConfig(Request $request, string $slug): JsonResponse
@@ -44,12 +51,22 @@ class AppConfigController extends Controller
             ], 404);
         }
 
-        return response()->json($this->resolvePublicConfigForBusiness($business, $request));
+        return $this->cacheable($request, response()->json($this->resolvePublicConfigForBusiness($business, $request)));
     }
 
-    public function show(): JsonResponse
+    public function show(Request $request): JsonResponse
     {
-        return $this->showDefault();
+        return $this->showDefault($request);
+    }
+
+    private function cacheable(Request $request, JsonResponse $response): JsonResponse
+    {
+        $response->setPublic();
+        $response->setMaxAge(self::CACHE_MAX_AGE_SECONDS);
+        $response->setEtag(sha1($response->getContent()));
+        $response->isNotModified($request);
+
+        return $response;
     }
 
     private function resolveConfigForBusiness(Business $business): array
