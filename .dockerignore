@@ -25,3 +25,6 @@ database/database.sqlite
 # manual testing — never useful inside the runtime image.
 *.png
 *.log
+
+# Database dumps contain customer data
+backups
