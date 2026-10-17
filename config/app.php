@@ -86,6 +86,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Behind a load balancer (Render, Fly, Nginx...) every request arrives
+    | from the proxy's address. Without trusting it, per-IP rate limits are
+    | shared by all users and URLs are generated with http:// instead of
+    | https://. Comma-separated addresses, or "*" when the app is only
+    | reachable through the proxy. Empty means trust none.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
     |

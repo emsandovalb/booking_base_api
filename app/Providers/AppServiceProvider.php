@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Support\LoginThrottle;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -23,6 +24,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $trustedProxies = trim((string) config('app.trusted_proxies'));
+        if ($trustedProxies !== '') {
+            TrustProxies::at($trustedProxies === '*'
+                ? '*'
+                : array_map('trim', explode(',', $trustedProxies)));
+        }
+
         // Session-based Super Admin login (routes/web.php POST /login).
         // The mobile API's /auth/login already has the generic
         // throttle:api (60/min) from the framework default — this is

@@ -221,8 +221,15 @@ class AuthController extends Controller
 
     public function forgotPassword(Request $request)
     {
+        // No `exists` rule and the same answer whether or not the account
+        // exists, so this endpoint can't be used to discover which emails
+        // are registered.
         $data = $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => 'required|email',
+        ]);
+
+        $genericResponse = response()->json([
+            'message' => 'If an account exists for that email, a password reset link has been sent.',
         ]);
 
         try {
@@ -243,14 +250,9 @@ class AuthController extends Controller
                 'email' => $data['email'],
                 'status' => $status,
             ]);
-
-            return response()->json([
-                'message' => __($status),
-                'errors' => ['email' => [__($status)]],
-            ], 422);
         }
 
-        return response()->json(['message' => __($status)]);
+        return $genericResponse;
     }
 
     public function resetPassword(Request $request)
