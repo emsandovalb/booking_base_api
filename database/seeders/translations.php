@@ -686,6 +686,21 @@ return [
         'translations' => ['en' => 'Appointment confirmed', 'es' => 'Cita confirmada'],
     ],
     [
+        'name' => 'booking_request_sent_title',
+        'module' => 'booking',
+        'description' => 'Shown after a booking is created (pending until the business confirms)',
+        'translations' => ['en' => 'Request sent', 'es' => 'Solicitud enviada'],
+    ],
+    [
+        'name' => 'booking_request_sent_subtitle',
+        'module' => 'booking',
+        'description' => 'Subtitle after a booking is created',
+        'translations' => [
+            'en' => 'The business will confirm your appointment soon. You can check its status in My appointments.',
+            'es' => 'El negocio confirmará tu cita pronto. Podés ver el estado en Mis citas.',
+        ],
+    ],
+    [
         'name' => 'booking_success_subtitle',
         'module' => 'booking',
         'description' => 'Booking success subtitle',
