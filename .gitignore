@@ -22,3 +22,8 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Generated Flutter web builds and APKs (rebuilt by deploy scripts)
+/public/app
+/public/jc
+/public/download
