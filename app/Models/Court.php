@@ -47,16 +47,6 @@ class Court extends Model
         return $this->belongsTo(Business::class);
     }
 
-    public function tournaments()
-    {
-        return $this->hasMany(Tournament::class);
-    }
-
-    public function matches()
-    {
-        return $this->hasMany(TournamentMatch::class, 'court_id');
-    }
-
     public function staffServices()
     {
         return $this->hasMany(StaffService::class, 'court_id');

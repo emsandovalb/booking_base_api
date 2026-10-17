@@ -58,11 +58,6 @@ class User extends Authenticatable
         return (bool) $this->is_super_admin;
     }
 
-    public function tournaments()
-    {
-        return $this->hasMany(Tournament::class);
-    }
-
     public function courts()
     {
         return $this->hasMany(Court::class, 'owner_id');
@@ -71,14 +66,6 @@ class User extends Authenticatable
     public function staff()
     {
         return $this->hasOne(Staff::class);
-    }
-
-    public function teams()
-    {
-        return $this->belongsToMany(Team::class, 'team_user')
-            ->using(TeamUser::class)
-            ->withPivot(['role', 'status', 'joined_at'])
-            ->withTimestamps();
     }
 
     public function businesses()

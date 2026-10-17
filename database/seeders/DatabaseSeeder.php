@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Event;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -18,12 +17,10 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
-        // `role: admin` here is NOT a super-admin grant — it only still
-        // matters for Tournament/Event/Team management, which hasn't been
-        // migrated off the legacy global role yet (tracked separately).
-        // It has no effect on business actions (courts/staff/bookings),
-        // which are purely business_user-membership-scoped, and it does
-        // NOT grant Super Admin panel access.
+        // `role: admin` here is a legacy global role and is NOT a
+        // super-admin grant. It has no effect on business actions
+        // (courts/staff/bookings), which are purely business_user-
+        // membership-scoped, and it does NOT grant Super Admin panel access.
         //
         // Deliberately not setting is_super_admin here: this seeder runs
         // automatically (`db:seed`, `migrate --seed`) in every environment
@@ -48,8 +45,6 @@ class DatabaseSeeder extends Seeder
                 'role' => 'user',
             ]
         );
-
-        Event::factory()->count(5)->create();
 
         $this->call(BusinessSeeder::class);
         $this->call(BarbershopDemoSeeder::class);

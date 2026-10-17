@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Business;
-use App\Models\Team;
 use App\Models\User;
 use App\Support\BusinessContext;
 use Illuminate\Auth\Events\PasswordReset;
@@ -54,7 +53,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $token,
-            'user' => $this->serializeUser($this->withManagedTeams($user), $context),
+            'user' => $this->serializeUser($user, $context),
         ]);
     }
 
@@ -80,7 +79,7 @@ class AuthController extends Controller
         $token = $user->createToken('mobile')->plainTextToken;
         return response()->json([
             'token' => $token,
-            'user' => $this->serializeUser($this->withManagedTeams($user), $context),
+            'user' => $this->serializeUser($user, $context),
         ]);
     }
 
@@ -92,7 +91,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Business not found'], 404);
         }
 
-        $payload = $this->serializeUser($this->withManagedTeams($user), $context);
+        $payload = $this->serializeUser($user, $context);
 
         return response()->json([
             ...$payload,
@@ -131,7 +130,6 @@ class AuthController extends Controller
         $user->fill($data);
         $user->save();
         $user->refresh();
-        $this->withManagedTeams($user);
         $user->avatar_url = $user->avatar ? Storage::url($user->avatar) : null;
         return response()->json(['user' => $user]);
     }
@@ -152,24 +150,6 @@ class AuthController extends Controller
         $user->password = Hash::make($data['new_password']);
         $user->save();
         return response()->json(['message' => 'Password updated']);
-    }
-
-    private function withManagedTeams(User $user): User
-    {
-        $ownedTeams = Team::query()
-            ->where('user_id', $user->id)
-            ->get();
-
-        $memberTeams = $user->teams()->get();
-
-        $merged = $ownedTeams
-            ->concat($memberTeams)
-            ->unique('id')
-            ->values();
-
-        $user->setRelation('teams', $merged);
-
-        return $user;
     }
 
     private function serializeUser(User $user, ?BusinessContext $context = null): array

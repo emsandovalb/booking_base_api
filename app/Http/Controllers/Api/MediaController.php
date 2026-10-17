@@ -13,8 +13,6 @@ class MediaController extends Controller
     private const ALLOWED_PREFIXES = [
         'avatars/',
         'courts/',
-        'teams/',
-        'tournaments/',
     ];
 
     private const ALLOWED_EXTENSIONS = [

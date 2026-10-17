@@ -3,10 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CourtController;
-use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\BookingController;
-use App\Http\Controllers\Api\TournamentController;
-use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\TranslationController;
 use App\Http\Controllers\Api\ResourceController;
 use App\Http\Controllers\Api\ResourceStaffController;
@@ -70,9 +67,6 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:lo
 // (Opcional) Lecturas públicas que tu app ya consuma sin versión:
 Route::apiResource('/public/courts', CourtController::class)->only(['index', 'show'])->names('public.courts');
 Route::get('/public/courts/{court}/availability', [CourtController::class, 'availability']);
-Route::apiResource('/public/events', EventController::class)->only(['index', 'show'])->names('public.events');
-Route::get('/tournaments', [TournamentController::class, 'index']);
-Route::get('/tournaments/{tournament}', [TournamentController::class, 'show']);
 
 /**
  * TU GRUPO VERSIONADO EXISTENTE
@@ -94,9 +88,6 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:password-forgot');
     Route::post('/auth/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:password-reset');
 
-    Route::get('/tournaments', [TournamentController::class, 'index']);
-    Route::get('/tournaments/{tournament}', [TournamentController::class, 'show']);
-    Route::get('/tournaments/{tournament}/teams', [TournamentController::class, 'teams']);
     Route::get('/app-config', [AppConfigController::class, 'showDefault']);
     Route::get('/media', [MediaController::class, 'show']);
     Route::get('/businesses/{slug}/app-config', [AppConfigController::class, 'showForBusinessSlug']);
@@ -149,20 +140,8 @@ Route::prefix('v1')->group(function () {
         Route::put('/courts/{court}', [CourtController::class, 'update']);
         Route::delete('/courts/{court}', [CourtController::class, 'destroy']);
         Route::get('/admin/reservations', [CourtController::class, 'reservationsForDay']);
-
-        Route::post('/events', [EventController::class, 'store']);
-        Route::post('/tournaments', [TournamentController::class, 'store']);
-        Route::put('/tournaments/{tournament}', [TournamentController::class, 'update']);
-        Route::delete('/tournaments/{tournament}', [TournamentController::class, 'destroy']);
-        Route::post('/tournaments/{tournament}/teams', [TournamentController::class, 'enrollTeam']);
-        Route::put('/tournaments/{tournament}/teams/{team}', [TournamentController::class, 'updateEnrollment']);
-
-        Route::get('/my/teams', [TeamController::class, 'index']);
-        Route::post('/my/teams', [TeamController::class, 'store']);
-        Route::put('/my/teams/{team}', [TeamController::class, 'update']);
     });
 
     Route::apiResource('courts', CourtController::class)->only(['index', 'show']);
     Route::get('/courts/{court}/availability', [CourtController::class, 'availability']);
-    Route::apiResource('events', EventController::class)->only(['index', 'show']);
 });
