@@ -12,7 +12,7 @@
         <img class="hero-logo" src="{{ $logoUrl }}" alt="Logo de {{ $business->name }}">
         <span class="eyebrow">Centro administrativo</span>
         <h2>{{ $business->name }}</h2>
-        <p>{{ now()->locale('es')->translatedFormat('l, j \d\e F') }}</p>
+        <p>{{ $business->localNow()->locale('es')->translatedFormat('l, j \d\e F') }}</p>
     </section>
     <section class="owner-grid" aria-label="Resumen de hoy">
         <article class="owner-card metric-card"><span class="metric-icon"><span class="material-symbols-rounded" aria-hidden="true">calendar_today</span></span><div><strong>{{ $today->count() }}</strong><span>Citas hoy</span></div></article>

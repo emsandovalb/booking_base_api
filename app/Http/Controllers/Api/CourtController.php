@@ -75,7 +75,7 @@ class CourtController extends Controller
         }
         $day = $request->query('day');
         try {
-            $date = CarbonImmutable::parse($day ?: CarbonImmutable::now()->toDateString());
+            $date = CarbonImmutable::parse($day ?: $context->business()->localNow()->toDateString());
         } catch (\Throwable $e) {
             return response()->json(['message' => 'Invalid date'], 422);
         }

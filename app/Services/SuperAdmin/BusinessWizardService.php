@@ -48,6 +48,7 @@ class BusinessWizardService
                 'city' => '',
             ],
             'hours' => [
+                'timezone' => Business::defaultTimezone(),
                 'cancellation_window_hours' => data_get($defaults, 'policies.cancellation_window_hours', 4),
                 'cancellation_policy_text' => data_get($defaults, 'policies.cancellation_policy_text', ''),
                 'schedule' => $this->defaultSchedule(),
@@ -190,6 +191,7 @@ class BusinessWizardService
             'legal_name' => $data['business']['legal_name'] ?? null,
             'business_type' => $data['business']['business_type'],
             'status' => $data['business']['status'],
+            'timezone' => $data['hours']['timezone'] ?? Business::defaultTimezone(),
             'app_config' => [
                 'identity' => [
                     'app_name' => $data['brand']['app_name'],

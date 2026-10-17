@@ -40,7 +40,7 @@
 
         <section class="step" data-step="2" hidden>
             <h3>Fecha y hora</h3><p class="hint">Los horarios ocupados desaparecen automáticamente.</p>
-            <div class="field"><label for="date">Fecha</label><input id="date" name="date" type="date" min="{{ today()->toDateString() }}" max="{{ today()->addDays(60)->toDateString() }}" value="{{ old('date', today()->addDay()->toDateString()) }}" required></div>
+            <div class="field"><label for="date">Fecha</label><input id="date" name="date" type="date" min="{{ $business->localNow()->toDateString() }}" max="{{ $business->localNow()->addDays(60)->toDateString() }}" value="{{ old('date', $business->localNow()->addDay()->toDateString()) }}" required></div>
             <p class="muted" id="slot-status">Selecciona fecha y profesional.</p><div class="slots" id="slots"></div>
             <div class="actions"><button class="button secondary" type="button" data-back>Atrás</button><button class="button primary" type="button" data-next>Continuar</button></div>
         </section>

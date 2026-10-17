@@ -66,7 +66,7 @@ class AdminBookingTransitionTest extends TestCase
 
     public function test_business_admin_can_complete_a_confirmed_booking_once_its_time_has_passed(): void
     {
-        [$admin, $business, $booking] = $this->bookingForBusinessAdmin('admin', 'confirmed', now()->subHour());
+        [$admin, $business, $booking] = $this->bookingForBusinessAdmin('admin', 'confirmed', Carbon::instance(Business::wallClockNow()->subHour()));
         Sanctum::actingAs($admin);
 
         $this->postJson("/api/v1/reservations/{$booking->id}/complete", [], $this->headers($business))

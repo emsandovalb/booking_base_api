@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Business;
 use App\Models\Court;
 use App\Models\Staff;
 use App\Services\BookingAvailabilityService;
@@ -29,7 +30,7 @@ class BookingController extends Controller
         $context->applyTo($query);
         $status = $request->query('status');
         if ($status === 'active') {
-            $query->whereIn('status', Booking::BLOCKING_STATUSES)->where('date', '>=', now());
+            $query->whereIn('status', Booking::BLOCKING_STATUSES)->where('date', '>=', $context->business()->localNow());
         } elseif ($status === 'completed') {
             $query->where('status', 'completed');
         } elseif (in_array($status, ['cancelled', 'rejected'], true)) {
@@ -95,7 +96,7 @@ class BookingController extends Controller
         $isOwner = $booking->user_id === $request->user()->id;
         if (!$isOwner && !$this->canManage($request, $booking, $context)) return response()->json(['message' => 'Forbidden'], 403);
         if (!in_array($booking->status, Booking::BLOCKING_STATUSES, true)) return response()->json(['message' => 'Reservation cannot be cancelled'], 422);
-        if ($isOwner && now()->diffInHours($booking->date, false) < 4) return response()->json(['message' => 'Cannot cancel within 4 hours of the start time'], 422);
+        if ($isOwner && $context->business()->localNow()->diffInHours($booking->date, false) < 4) return response()->json(['message' => 'Cannot cancel within 4 hours of the start time'], 422);
         return $this->transition($booking, 'cancelled');
     }
 
@@ -201,7 +202,7 @@ class BookingController extends Controller
         } catch (\InvalidArgumentException) {
             abort(422, 'Invalid appointment time');
         }
-        if ($start->isPast()) abort(422, 'Appointments must be scheduled in the future');
+        if ($start->lessThan($context->business()->localNow())) abort(422, 'Appointments must be scheduled in the future');
         return [$service, $staff, $start];
     }
 
@@ -225,13 +226,18 @@ class BookingController extends Controller
         // which is only correct once the appointment has actually happened —
         // completing it early would let someone else book the same staff
         // member for a slot that hasn't occurred yet.
-        if ($target === 'completed' && $booking->date->isFuture()) {
+        if ($target === 'completed' && $booking->date->greaterThan($this->businessNow($booking))) {
             return response()->json(['message' => 'Cannot mark a reservation completed before its scheduled time'], 422);
         }
         $booking->status = $target;
         if ($target === 'completed') $booking->completed_at = now();
         $booking->save();
         return response()->json($booking->load(['court', 'staff']));
+    }
+
+    private function businessNow(Booking $booking): CarbonImmutable
+    {
+        return $booking->business?->localNow() ?? Business::wallClockNow();
     }
 
     private function context(Request $request): ?BusinessContext

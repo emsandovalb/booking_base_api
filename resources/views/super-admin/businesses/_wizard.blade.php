@@ -1039,6 +1039,16 @@
 
                     <div class="wizard-grid">
                         <div class="wizard-field span-3">
+                            <label>Timezone</label>
+                            <select name="hours[timezone]" required>
+                                @php $selectedTz = old('hours.timezone', $form['hours']['timezone'] ?? \App\Models\Business::defaultTimezone()); @endphp
+                                @foreach (['America/Costa_Rica', 'America/Mexico_City', 'America/Guatemala', 'America/El_Salvador', 'America/Tegucigalpa', 'America/Managua', 'America/Panama', 'America/Bogota', 'America/Lima', 'America/Santiago', 'America/Argentina/Buenos_Aires', 'America/New_York', 'Europe/Madrid', 'UTC'] as $tz)
+                                    <option value="{{ $tz }}" @selected($selectedTz === $tz)>{{ $tz }}</option>
+                                @endforeach
+                            </select>
+                            @error('hours.timezone') <div class="error">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="wizard-field span-3">
                             <label>Cancellation window (hours)</label>
                             <input
                                 type="number"

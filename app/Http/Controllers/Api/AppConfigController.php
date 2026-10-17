@@ -64,7 +64,9 @@ class AppConfigController extends Controller
             ]
         );
 
-        return $this->sanitizeBrandingPayload($business, $config);
+        return array_merge($this->sanitizeBrandingPayload($business, $config), [
+            'timezone' => $business->timezone(),
+        ]);
     }
 
     private function resolvePublicConfigForBusiness(Business $business, Request $request): array
@@ -95,6 +97,7 @@ class AppConfigController extends Controller
             'contact_phone' => $contact['phone'] ?? '',
             'api_base_url' => rtrim($request->getSchemeAndHttpHost(), '/') . '/api/v1',
             'business_type' => $business->business_type ?? 'generic',
+            'timezone' => $business->timezone(),
             'identity' => $identity,
             'assets' => $assets,
             'colors' => $colors,

@@ -22,9 +22,10 @@ class BusinessAppController extends Controller
     public function home(Request $request, string $slug): View
     {
         $business = $this->business($request, $slug);
-        $today = $business->bookings()->whereDate('date', today())->with(['court', 'staff', 'user'])->orderBy('date')->get();
-        $next = $business->bookings()->blocking()->where('date', '>=', now())->with(['court', 'staff', 'user'])->orderBy('date')->first();
-        $pending = $business->bookings()->where('status', 'pending')->where('date', '>=', now())->count();
+        $now = $business->localNow();
+        $today = $business->bookings()->whereDate('date', $now->toDateString())->with(['court', 'staff', 'user'])->orderBy('date')->get();
+        $next = $business->bookings()->blocking()->where('date', '>=', $now)->with(['court', 'staff', 'user'])->orderBy('date')->first();
+        $pending = $business->bookings()->where('status', 'pending')->where('date', '>=', $now)->count();
         $serviceCount = $business->courts()->where('status', 'active')->count();
         $staffCount = $business->staff()->where('is_active', true)->count();
 
@@ -34,7 +35,7 @@ class BusinessAppController extends Controller
     public function agenda(Request $request, string $slug): View
     {
         $business = $this->business($request, $slug);
-        $date = $request->query('date', today()->toDateString());
+        $date = $request->query('date', $business->localNow()->toDateString());
         $selectedDate = CarbonImmutable::createFromFormat('Y-m-d', $date);
         $bookings = $business->bookings()->whereDate('date', $selectedDate)
             ->with(['court', 'staff', 'user'])->orderBy('date')->get();
@@ -71,7 +72,7 @@ class BusinessAppController extends Controller
         $business = $this->business($request, $slug);
         $item = $business->bookings()->whereKey($bookingId)->with(['court', 'staff'])->firstOrFail();
         $data = $request->validate([
-            'date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'date' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.$business->localNow()->toDateString()],
             'time' => ['required', 'date_format:H:i'],
         ]);
         abort_unless($item->status === 'pending' && $item->staff, 422, 'Solo se pueden reprogramar citas pendientes con profesional asignado');

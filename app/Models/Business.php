@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -19,6 +20,7 @@ class Business extends Model
         'legal_name',
         'business_type',
         'status',
+        'timezone',
         'app_config',
         'contact_config',
         'branding_config',
@@ -105,6 +107,40 @@ class Business extends Model
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    public function timezone(): string
+    {
+        return self::validTimezone($this->timezone) ?? self::defaultTimezone();
+    }
+
+    public static function defaultTimezone(): string
+    {
+        return self::validTimezone(config('booking.default_timezone')) ?? 'UTC';
+    }
+
+    /**
+     * Booking dates are stored as the business's local wall-clock time in a
+     * column the app reads as UTC. Comparisons against "now" must therefore
+     * use the business's wall clock carried in the app timezone — not the
+     * real UTC instant, which is hours off for any non-UTC business.
+     */
+    public function localNow(): CarbonImmutable
+    {
+        return self::wallClockNow($this->timezone());
+    }
+
+    public static function wallClockNow(?string $timezone = null): CarbonImmutable
+    {
+        return CarbonImmutable::now($timezone ?? self::defaultTimezone())
+            ->shiftTimezone(config('app.timezone'));
+    }
+
+    private static function validTimezone(mixed $timezone): ?string
+    {
+        return is_string($timezone) && in_array($timezone, timezone_identifiers_list(), true)
+            ? $timezone
+            : null;
     }
 
     public static function resolveSlug(string $slug): string

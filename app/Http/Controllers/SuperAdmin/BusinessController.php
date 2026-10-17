@@ -202,6 +202,7 @@ class BusinessController extends Controller
             'business.legal_name' => ['nullable', 'string', 'max:255'],
             'business.business_type' => ['required', 'string', 'max:100'],
             'business.status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
+            'hours.timezone' => ['nullable', 'timezone:all'],
             'brand.app_name' => ['required', 'string', 'max:255'],
             'brand.display_name' => ['required', 'string', 'max:255'],
             'brand.short_name' => ['required', 'string', 'max:100'],
@@ -262,6 +263,7 @@ class BusinessController extends Controller
             'legal_name' => ['nullable', 'string', 'max:255'],
             'business_type' => ['required', 'string', 'max:100'],
             'status' => ['required', Rule::in(['active', 'inactive', 'suspended'])],
+            'timezone' => ['nullable', 'timezone:all'],
             'branding.identity.app_name' => ['required', 'string', 'max:255'],
             'branding.identity.display_name' => ['required', 'string', 'max:255'],
             'branding.identity.short_name' => ['required', 'string', 'max:100'],
@@ -382,6 +384,7 @@ class BusinessController extends Controller
             'legal_name' => $data['legal_name'] ?? null,
             'business_type' => $data['business_type'],
             'status' => $data['status'],
+            'timezone' => $data['timezone'] ?? $business?->timezone ?? Business::defaultTimezone(),
             'app_config' => [
                 'identity' => [
                     'app_name' => $identity['app_name'],
@@ -474,6 +477,7 @@ class BusinessController extends Controller
             'legal_name' => $business->legal_name ?? '',
             'business_type' => $business->business_type ?? 'barbershop',
             'status' => $business->status ?? 'active',
+            'timezone' => $business?->timezone() ?? Business::defaultTimezone(),
             'branding' => [
                 'identity' => [
                     'app_name' => data_get($businessConfig, 'identity.app_name', $brandingDefaults['identity']['app_name'] ?? ''),
@@ -589,6 +593,7 @@ class BusinessController extends Controller
             'legal_name' => $business->legal_name,
             'business_type' => $business->business_type,
             'status' => $business->status,
+            'timezone' => $business->timezone,
             'app_config' => $business->app_config,
             'contact_config' => $business->contact_config,
             'branding_config' => $business->branding_config,

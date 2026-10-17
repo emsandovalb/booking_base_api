@@ -78,6 +78,7 @@ class SuperAdminBusinessWizardTest extends TestCase
             ->assertRedirect();
 
         $business = Business::where('slug', 'bemuss-wizard')->firstOrFail();
+        $this->assertSame('America/Panama', $business->timezone);
         $this->assertCount(2, $business->courts);
         $this->assertCount(2, $business->staff);
         $this->assertSame(4, $business->staff->sum(fn ($staff) => $staff->courts()->count()));
@@ -134,6 +135,7 @@ class SuperAdminBusinessWizardTest extends TestCase
                 'city' => 'San Jose',
             ],
             'hours' => [
+                'timezone' => 'America/Panama',
                 'cancellation_window_hours' => 6,
                 'cancellation_policy_text' => 'Cancelar con 6 horas de anticipacion.',
                 'schedule' => [

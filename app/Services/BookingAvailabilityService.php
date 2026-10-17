@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Booking;
+use App\Models\Business;
 use App\Models\BusinessClosure;
 use App\Models\Court;
 use App\Models\Staff;
@@ -70,6 +71,7 @@ class BookingAvailabilityService
             return [];
         }
         $duration = $this->durationMinutes($service);
+        $now = $business ? $business->localNow() : Business::wallClockNow();
 
         $bookings = Booking::query()
             ->blocking()
@@ -91,7 +93,7 @@ class BookingAvailabilityService
         $slots = [];
         for ($start = $open; $start->addMinutes($duration)->lessThanOrEqualTo($close); $start = $start->addMinutes(15)) {
             $end = $start->addMinutes($duration);
-            if ($start->isPast() || $this->overlaps($start, $end, $bookings)) {
+            if ($start->lessThan($now) || $this->overlaps($start, $end, $bookings)) {
                 continue;
             }
             $slots[] = [
@@ -102,6 +104,17 @@ class BookingAvailabilityService
         }
 
         return $slots;
+    }
+
+    /**
+     * The business's current wall-clock time, comparable with stored
+     * booking dates (see Business::localNow()).
+     */
+    public function nowFor(Court $service): CarbonImmutable
+    {
+        $business = $service->relationLoaded('business') ? $service->business : $service->business()->first();
+
+        return $business ? $business->localNow() : Business::wallClockNow();
     }
 
     public function hasSlot(Court $service, ?Staff $staff, string $date, string $time, ?int $excludeBookingId = null): bool

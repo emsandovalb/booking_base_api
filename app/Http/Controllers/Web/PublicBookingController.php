@@ -40,7 +40,7 @@ class PublicBookingController extends Controller
         $data = $request->validate([
             'service_id' => ['required', 'integer'],
             'staff_id' => ['required', 'integer'],
-            'date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'date' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.$business->localNow()->toDateString()],
         ]);
         [$service, $staff] = $this->selection($business, $data['service_id'], $data['staff_id']);
 
@@ -53,7 +53,7 @@ class PublicBookingController extends Controller
         $data = $request->validate([
             'service_id' => ['required', 'integer'],
             'staff_id' => ['required', 'integer'],
-            'date' => ['required', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'date' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.$business->localNow()->toDateString()],
             'time' => ['required', 'date_format:H:i'],
             'customer_name' => ['required', 'string', 'max:120'],
             'customer_phone' => ['required', 'string', 'max:40'],
