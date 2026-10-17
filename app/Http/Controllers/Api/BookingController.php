@@ -8,6 +8,7 @@ use App\Models\Business;
 use App\Models\Court;
 use App\Models\Staff;
 use App\Services\BookingAvailabilityService;
+use App\Services\SuperAdmin\AuditLogService;
 use App\Support\BusinessContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -109,7 +110,21 @@ class BookingController extends Controller
         $context = $this->context($request);
         if (!$context) return response()->json(['message' => 'Business not found'], 404);
         if (!$this->canManage($request, $booking, $context)) return response()->json(['message' => 'Forbidden'], 403);
-        $booking->update(['payment_status' => 'paid']);
+
+        // An empty body keeps the original "mark as paid" contract.
+        $target = $request->validate([
+            'payment_status' => ['nullable', 'in:paid,unpaid'],
+        ])['payment_status'] ?? 'paid';
+        if ($target === 'paid' && in_array($booking->status, ['cancelled', 'rejected'], true)) {
+            return response()->json(['message' => "A {$booking->status} reservation cannot be marked as paid"], 422);
+        }
+
+        $previous = $booking->payment_status;
+        if ($previous !== $target) {
+            $booking->update(['payment_status' => $target]);
+            app(AuditLogService::class)->record($context->business(), $request->user(), 'booking.payment_status_changed', $booking,
+                ['payment_status' => $previous], ['payment_status' => $target]);
+        }
         return response()->json($booking->load(['court', 'staff']));
     }
 
@@ -155,6 +170,8 @@ class BookingController extends Controller
                             'status' => 'pending',
                             'payment_status' => 'unpaid',
                             'booking_code' => Str::upper(Str::random(8)),
+                            // Server-side only. price_per_hour is a legacy column
+                            // name: it holds the service's flat price per appointment.
                             'total_price' => round((float) ($service->price_per_hour ?? 0), 2),
                         ]));
                     } catch (QueryException $exception) {
@@ -195,6 +212,14 @@ class BookingController extends Controller
             $context->applyTo($staffQuery);
             $staff = $staffQuery->whereHas('courts', fn ($query) => $query->whereKey($service->id))->first();
             if (!$staff) abort(422, 'Staff is not linked to this court');
+        } else {
+            // A service performed by staff must be booked against one of
+            // them: a staff-less booking would hold no professional's
+            // calendar, letting a second client take the same barber.
+            $staffedQuery = Staff::query()->where('is_active', true)
+                ->whereHas('courts', fn ($query) => $query->whereKey($service->id));
+            $context->applyTo($staffedQuery);
+            if ($staffedQuery->exists()) abort(422, 'Select a professional for this service');
         }
 
         try {

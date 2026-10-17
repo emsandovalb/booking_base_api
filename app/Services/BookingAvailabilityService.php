@@ -77,12 +77,15 @@ class BookingAvailabilityService
             ->blocking()
             ->where('business_id', $service->business_id)
             // With a staff member selected, that staff's calendar is the scarce
-            // resource. Without one (reservation_staff_selection disabled for
-            // this business), the service/court itself is — so only bookings
-            // against this same court, also staff-less, can conflict.
+            // resource. Without one (a service no staff performs), the
+            // service/court itself is. Staff-less bookings of this service
+            // made before staff was linked to it still hold their time, so
+            // they block every professional rather than none.
             ->when(
                 $staff,
-                fn ($query) => $query->where('staff_id', $staff->id),
+                fn ($query) => $query->where(fn ($inner) => $inner
+                    ->where('staff_id', $staff->id)
+                    ->orWhere(fn ($legacy) => $legacy->where('court_id', $service->id)->whereNull('staff_id'))),
                 fn ($query) => $query->where('court_id', $service->id)->whereNull('staff_id'),
             )
             ->whereBetween('date', [$day, $day->endOfDay()])
