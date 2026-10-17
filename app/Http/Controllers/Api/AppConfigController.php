@@ -66,6 +66,7 @@ class AppConfigController extends Controller
 
         return array_merge($this->sanitizeBrandingPayload($business, $config), [
             'timezone' => $business->timezone(),
+            'utc_offset_minutes' => $business->utcOffsetMinutes(),
         ]);
     }
 
@@ -98,6 +99,7 @@ class AppConfigController extends Controller
             'api_base_url' => rtrim($request->getSchemeAndHttpHost(), '/') . '/api/v1',
             'business_type' => $business->business_type ?? 'generic',
             'timezone' => $business->timezone(),
+            'utc_offset_minutes' => $business->utcOffsetMinutes(),
             'identity' => $identity,
             'assets' => $assets,
             'colors' => $colors,

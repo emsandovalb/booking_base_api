@@ -145,10 +145,12 @@ class BusinessTimezoneTest extends TestCase
 
         $this->getJson("/api/v1/businesses/{$business->slug}/app-config")
             ->assertOk()
-            ->assertJsonPath('timezone', 'America/Costa_Rica');
+            ->assertJsonPath('timezone', 'America/Costa_Rica')
+            ->assertJsonPath('utc_offset_minutes', -360);
         $this->getJson("/api/v1/public/businesses/{$business->slug}/config")
             ->assertOk()
-            ->assertJsonPath('timezone', 'America/Costa_Rica');
+            ->assertJsonPath('timezone', 'America/Costa_Rica')
+            ->assertJsonPath('utc_offset_minutes', -360);
     }
 
     private function catalog(string $timezone): array

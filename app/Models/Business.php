@@ -130,6 +130,15 @@ class Business extends Model
         return self::wallClockNow($this->timezone());
     }
 
+    /**
+     * Current offset for clients without a timezone database (Flutter).
+     * Sent with every config fetch, so DST changes are picked up on refresh.
+     */
+    public function utcOffsetMinutes(): int
+    {
+        return CarbonImmutable::now($this->timezone())->utcOffset();
+    }
+
     public static function wallClockNow(?string $timezone = null): CarbonImmutable
     {
         return CarbonImmutable::now($timezone ?? self::defaultTimezone())
