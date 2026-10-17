@@ -161,6 +161,8 @@ class BusinessTimezoneTest extends TestCase
         // Without a policy the platform default (4 hours) applies.
         $business->update(['app_config' => null]);
         $this->assertSame(4, $business->fresh()->cancellationWindowHours());
+        $this->getJson("/api/v1/public/businesses/{$business->slug}/config")
+            ->assertJsonPath('policies.cancellation_window_hours', 4);
     }
 
     public function test_app_configs_expose_the_business_timezone(): void

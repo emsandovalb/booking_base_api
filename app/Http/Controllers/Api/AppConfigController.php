@@ -59,7 +59,11 @@ class AppConfigController extends Controller
             [
                 'contact' => Arr::get($business->contact_config, 'contact', []),
                 'hours' => Arr::get($business->app_config, 'hours', []),
-                'policies' => Arr::get($business->app_config, 'policies', []),
+                // The effective window (the business's, else the platform
+                // default) so clients show the same rule the API enforces.
+                'policies' => array_merge(Arr::get($business->app_config, 'policies', []), [
+                    'cancellation_window_hours' => $business->cancellationWindowHours(),
+                ]),
                 'features' => Arr::get($business->feature_config, 'features', []),
             ]
         );
