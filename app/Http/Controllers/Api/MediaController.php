@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -45,7 +45,7 @@ class MediaController extends Controller
             $headers['Content-Type'] = $mimeType;
         }
 
-        if (!$disk->exists($normalized)) {
+        if (! $disk->exists($normalized)) {
             return $this->notFound();
         }
 
@@ -102,7 +102,7 @@ class MediaController extends Controller
         }
 
         $extension = strtolower(pathinfo($decoded, PATHINFO_EXTENSION));
-        if ($extension === '' || !in_array($extension, self::ALLOWED_EXTENSIONS, true)) {
+        if ($extension === '' || ! in_array($extension, self::ALLOWED_EXTENSIONS, true)) {
             return null;
         }
 

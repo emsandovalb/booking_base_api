@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -26,8 +27,8 @@ return new class extends Migration
             $table->unique(['occupancy_key', 'occupied_slot_at'], 'bookings_occupancy_slot_unique');
         });
 
-        foreach (\Illuminate\Support\Facades\DB::table('bookings')->select(['id', 'court_id', 'staff_id'])->get() as $booking) {
-            \Illuminate\Support\Facades\DB::table('bookings')->where('id', $booking->id)->update([
+        foreach (DB::table('bookings')->select(['id', 'court_id', 'staff_id'])->get() as $booking) {
+            DB::table('bookings')->where('id', $booking->id)->update([
                 'occupancy_key' => $booking->staff_id ? 'staff:'.$booking->staff_id : 'court:'.$booking->court_id,
             ]);
         }

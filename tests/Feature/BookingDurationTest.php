@@ -24,7 +24,7 @@ class BookingDurationTest extends TestCase
     protected function authHeaders(User $user, ?Business $business = null): array
     {
         $token = $user->createToken('test')->plainTextToken;
-        $headers = ['Authorization' => 'Bearer ' . $token, 'Accept' => 'application/json'];
+        $headers = ['Authorization' => 'Bearer '.$token, 'Accept' => 'application/json'];
         if ($business) {
             $headers['X-Business-Slug'] = $business->slug;
         }
@@ -36,7 +36,7 @@ class BookingDurationTest extends TestCase
     {
         return Business::create([
             'name' => 'Barberia Tres Amigos',
-            'slug' => 'barberia-tres-amigos-' . uniqid(),
+            'slug' => 'barberia-tres-amigos-'.uniqid(),
             'business_type' => 'barbershop',
             'status' => 'active',
         ]);
@@ -187,7 +187,7 @@ class BookingDurationTest extends TestCase
         ];
 
         $response = $this->postJson(
-            '/api/v1/bookings/' . $original->id . '/rebook',
+            '/api/v1/bookings/'.$original->id.'/rebook',
             $payload,
             $this->authHeaders($user, $business)
         );
@@ -202,4 +202,3 @@ class BookingDurationTest extends TestCase
         ]);
     }
 }
-

@@ -59,7 +59,7 @@ class TenantIsolationEnforcementTest extends TestCase
         $business = $this->createBusiness('barberia-tres-amigos', 'Barberia Tres Amigos');
         $court = $this->createCourt($business, 'Tres Amigos Corte');
 
-        $response = $this->getJson('/api/v1/resources/' . $court->id);
+        $response = $this->getJson('/api/v1/resources/'.$court->id);
 
         $response->assertStatus(404);
     }
@@ -70,7 +70,7 @@ class TenantIsolationEnforcementTest extends TestCase
         $role = $this->createRole('barber', 'Barber');
         $staff = $this->createStaff($business, $role, 'Carlos Barber');
 
-        $response = $this->getJson('/api/v1/staff/' . $staff->id);
+        $response = $this->getJson('/api/v1/staff/'.$staff->id);
 
         $response->assertStatus(404);
     }
@@ -152,7 +152,7 @@ class TenantIsolationEnforcementTest extends TestCase
         $this->assignMembership($admin, $businessA, 'owner');
         $courtB = $this->createCourt($businessB, 'Aurora Facial');
 
-        $response = $this->getJson('/api/v1/resources/' . $courtB->id, [
+        $response = $this->getJson('/api/v1/resources/'.$courtB->id, [
             'X-Business-Slug' => $businessA->slug,
         ]);
 
@@ -167,7 +167,7 @@ class TenantIsolationEnforcementTest extends TestCase
         $this->assignMembership($admin, $businessA, 'owner');
         $courtB = $this->createCourt($businessB, 'Aurora Facial');
 
-        $response = $this->putJson('/api/v1/courts/' . $courtB->id, [
+        $response = $this->putJson('/api/v1/courts/'.$courtB->id, [
             'name' => 'Hijacked Name',
         ], [
             'X-Business-Slug' => $businessA->slug,
@@ -188,7 +188,7 @@ class TenantIsolationEnforcementTest extends TestCase
         $this->assignMembership($admin, $businessA, 'owner');
         $courtB = $this->createCourt($businessB, 'Aurora Facial');
 
-        $response = $this->deleteJson('/api/v1/courts/' . $courtB->id, [], [
+        $response = $this->deleteJson('/api/v1/courts/'.$courtB->id, [], [
             'X-Business-Slug' => $businessA->slug,
         ]);
 
@@ -208,7 +208,7 @@ class TenantIsolationEnforcementTest extends TestCase
         $role = $this->createRole('stylist', 'Stylist');
         $staffB = $this->createStaff($businessB, $role, 'Alicia Stylist');
 
-        $response = $this->getJson('/api/v1/staff/' . $staffB->id, [
+        $response = $this->getJson('/api/v1/staff/'.$staffB->id, [
             'X-Business-Slug' => $businessA->slug,
         ]);
 
@@ -224,7 +224,7 @@ class TenantIsolationEnforcementTest extends TestCase
         $role = $this->createRole('stylist', 'Stylist');
         $staffB = $this->createStaff($businessB, $role, 'Alicia Stylist');
 
-        $response = $this->patchJson('/api/v1/staff/' . $staffB->id, [
+        $response = $this->patchJson('/api/v1/staff/'.$staffB->id, [
             'name' => 'Hijacked Barber',
         ], [
             'X-Business-Slug' => $businessA->slug,
@@ -246,7 +246,7 @@ class TenantIsolationEnforcementTest extends TestCase
         $role = $this->createRole('stylist', 'Stylist');
         $staffB = $this->createStaff($businessB, $role, 'Alicia Stylist');
 
-        $response = $this->patchJson('/api/v1/staff/' . $staffB->id . '/deactivate', [], [
+        $response = $this->patchJson('/api/v1/staff/'.$staffB->id.'/deactivate', [], [
             'X-Business-Slug' => $businessA->slug,
         ]);
 
@@ -265,7 +265,7 @@ class TenantIsolationEnforcementTest extends TestCase
         $courtB = $this->createCourt($businessB, 'Aurora Facial');
         $bookingB = $this->createBooking($user, $courtB, $businessB);
 
-        $response = $this->getJson('/api/v1/bookings/' . $bookingB->id, [
+        $response = $this->getJson('/api/v1/bookings/'.$bookingB->id, [
             'X-Business-Slug' => $businessA->slug,
         ]);
 
@@ -283,7 +283,7 @@ class TenantIsolationEnforcementTest extends TestCase
         $bookingB = $this->createBooking($client, $courtB, $businessB);
         Sanctum::actingAs($admin);
 
-        $response = $this->postJson('/api/v1/bookings/' . $bookingB->id . '/confirm', [], [
+        $response = $this->postJson('/api/v1/bookings/'.$bookingB->id.'/confirm', [], [
             'X-Business-Slug' => $businessA->slug,
         ]);
 
@@ -348,7 +348,7 @@ class TenantIsolationEnforcementTest extends TestCase
     {
         return StaffRole::create([
             'name' => $name,
-            'slug' => $slug . '-' . uniqid(),
+            'slug' => $slug.'-'.uniqid(),
             'description' => $name,
         ]);
     }
@@ -371,7 +371,7 @@ class TenantIsolationEnforcementTest extends TestCase
             'business_id' => $business->id,
             'staff_role_id' => $role->id,
             'name' => $name,
-            'email' => strtolower(str_replace(' ', '.', $name)) . '@example.com',
+            'email' => strtolower(str_replace(' ', '.', $name)).'@example.com',
             'is_active' => true,
         ]);
     }

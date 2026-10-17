@@ -5,8 +5,8 @@ namespace App\Support;
 use App\Models\Business;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 
 class BusinessContext
@@ -14,8 +14,7 @@ class BusinessContext
     public function __construct(
         private readonly ?string $slug,
         private readonly ?Business $business,
-    ) {
-    }
+    ) {}
 
     public static function fromRequest(Request $request): self
     {
@@ -67,7 +66,7 @@ class BusinessContext
     public function requireBusiness(): ?Business
     {
         if ($this->hasSlug() && $this->business === null) {
-            throw (new ModelNotFoundException())->setModel(Business::class, [$this->slug]);
+            throw (new ModelNotFoundException)->setModel(Business::class, [$this->slug]);
         }
 
         return $this->business;

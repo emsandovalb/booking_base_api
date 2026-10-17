@@ -1,25 +1,25 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AppConfigController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\BusinessClosureController;
 use App\Http\Controllers\Api\CourtController;
 use App\Http\Controllers\Api\EventController;
-use App\Http\Controllers\Api\BookingController;
-use App\Http\Controllers\Api\TournamentController;
-use App\Http\Controllers\Api\TeamController;
-use App\Http\Controllers\Api\TranslationController;
+use App\Http\Controllers\Api\MediaController;
+use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\ResourceController;
 use App\Http\Controllers\Api\ResourceStaffController;
 use App\Http\Controllers\Api\StaffController;
-use App\Http\Controllers\Api\ReservationController;
-use App\Http\Controllers\Api\AppConfigController;
-use App\Http\Controllers\Api\MediaController;
-use App\Http\Controllers\Api\BusinessClosureController;
+use App\Http\Controllers\Api\TeamController;
+use App\Http\Controllers\Api\TournamentController;
+use App\Http\Controllers\Api\TranslationController;
 use App\Models\Booking;
 use App\Models\BusinessClosure;
 use App\Models\Court;
 use App\Models\Staff;
 use App\Support\BusinessContext;
+use Illuminate\Support\Facades\Route;
 
 /**
  * Route-model bindings resolve tenant-scoped models. The scoping happens
@@ -31,7 +31,7 @@ use App\Support\BusinessContext;
 $scopedBinder = function (string $modelClass) {
     return function (mixed $value) use ($modelClass) {
         $context = BusinessContext::fromRequest(request());
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             abort(404, 'Business not found');
         }
 

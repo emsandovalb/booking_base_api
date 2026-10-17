@@ -17,7 +17,7 @@ class BookingAvailabilityStatusTest extends TestCase
     private function authHeaders(User $user, Business $business): array
     {
         return [
-            'Authorization' => 'Bearer ' . $user->createToken('test')->plainTextToken,
+            'Authorization' => 'Bearer '.$user->createToken('test')->plainTextToken,
             'Accept' => 'application/json',
             'X-Business-Slug' => $business->slug,
         ];
@@ -27,7 +27,7 @@ class BookingAvailabilityStatusTest extends TestCase
     {
         return Business::create([
             'name' => 'Barberia Tres Amigos',
-            'slug' => 'barberia-tres-amigos-' . uniqid(),
+            'slug' => 'barberia-tres-amigos-'.uniqid(),
             'business_type' => 'barbershop',
             'status' => 'active',
         ]);
@@ -71,7 +71,7 @@ class BookingAvailabilityStatusTest extends TestCase
             ->assertCreated()
             ->json();
 
-        $this->postJson('/api/v1/bookings/' . $booking['id'] . '/cancel', [], $headers)
+        $this->postJson('/api/v1/bookings/'.$booking['id'].'/cancel', [], $headers)
             ->assertOk()
             ->assertJsonPath('status', 'cancelled');
 
@@ -90,9 +90,9 @@ class BookingAvailabilityStatusTest extends TestCase
         $booking = $this->postJson('/api/v1/bookings', $this->bookingPayload($court, $start), $headers)
             ->assertCreated()
             ->json();
-        $this->postJson('/api/v1/bookings/' . $booking['id'] . '/cancel', [], $headers)->assertOk();
+        $this->postJson('/api/v1/bookings/'.$booking['id'].'/cancel', [], $headers)->assertOk();
 
-        $this->getJson('/api/v1/courts/' . $court->id . '/availability?date=' . $start->toDateString(), $headers)
+        $this->getJson('/api/v1/courts/'.$court->id.'/availability?date='.$start->toDateString(), $headers)
             ->assertOk()
             ->assertJsonPath('booked', []);
     }
@@ -112,7 +112,7 @@ class BookingAvailabilityStatusTest extends TestCase
 
         $this->postJson('/api/v1/bookings', $this->bookingPayload($court, $start), $headers)
             ->assertCreated();
-        $this->getJson('/api/v1/courts/' . $court->id . '/availability?date=' . $start->toDateString(), $headers)
+        $this->getJson('/api/v1/courts/'.$court->id.'/availability?date='.$start->toDateString(), $headers)
             ->assertOk()
             ->assertJsonCount(1, 'booked');
     }

@@ -25,7 +25,7 @@ class EventController extends Controller
         // business to check membership against, so this is gated by the
         // platform Super Admin flag, not canManageBusiness().
         $user = $request->user();
-        if (!$user || !$user->isSuperAdmin()) {
+        if (! $user || ! $user->isSuperAdmin()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -36,7 +36,7 @@ class EventController extends Controller
             'date' => 'nullable|date',
         ]);
         $event = Event::create($data);
+
         return response()->json($event, 201);
     }
 }
-

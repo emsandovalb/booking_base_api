@@ -96,7 +96,7 @@ class User extends Authenticatable
 
     public function activeBusinessMembership(?Business $business): ?BusinessUser
     {
-        if (!$business) {
+        if (! $business) {
             return null;
         }
 
@@ -118,7 +118,7 @@ class User extends Authenticatable
     public function canManageBusiness(?Business $business): bool
     {
         $membership = $this->activeBusinessMembership($business);
-        if (!$membership) {
+        if (! $membership) {
             return false;
         }
 
@@ -128,7 +128,7 @@ class User extends Authenticatable
     public function hasBusinessRole($business, array|string $roles): bool
     {
         $business = $this->resolveBusiness($business);
-        if (!$business) {
+        if (! $business) {
             return false;
         }
 
@@ -144,7 +144,7 @@ class User extends Authenticatable
     public function belongsToBusiness($business): bool
     {
         $business = $this->resolveBusiness($business);
-        if (!$business) {
+        if (! $business) {
             return false;
         }
 

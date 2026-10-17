@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Http\Controllers\Api\MediaController;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -20,14 +21,14 @@ class MediaControllerTest extends TestCase
         );
         $this->assertTrue(Storage::disk('public')->exists('courts/test-media.png'));
         $this->assertTrue(is_file(Storage::disk('public')->path('courts/test-media.png')));
-        $request = \Illuminate\Http\Request::create('/api/v1/media', 'GET', [
+        $request = Request::create('/api/v1/media', 'GET', [
             'path' => '/storage/courts/test-media.png',
         ]);
         $this->assertSame('/storage/courts/test-media.png', $request->query('path'));
         $controllerResponse = app(MediaController::class)->show($request);
         $this->assertSame(200, $controllerResponse->getStatusCode());
 
-        $response = $this->get('/api/v1/media?path=' . rawurlencode('/storage/courts/test-media.png'));
+        $response = $this->get('/api/v1/media?path='.rawurlencode('/storage/courts/test-media.png'));
 
         $response->assertOk();
         $response->assertHeader('content-type', 'image/png');
@@ -50,7 +51,7 @@ class MediaControllerTest extends TestCase
 
     public function test_media_path_normalizer_rejects_null_bytes_and_encoded_equivalents(): void
     {
-        $controller = new MediaController();
+        $controller = new MediaController;
         $invoke = function (string $value) use ($controller): ?string {
             $reflection = new \ReflectionClass($controller);
             $method = $reflection->getMethod('normalizePath');
@@ -67,7 +68,7 @@ class MediaControllerTest extends TestCase
 
     public function test_media_path_normalizer_accepts_allowed_public_image_paths(): void
     {
-        $controller = new MediaController();
+        $controller = new MediaController;
         $reflection = new \ReflectionClass($controller);
         $method = $reflection->getMethod('normalizePath');
         $method->setAccessible(true);

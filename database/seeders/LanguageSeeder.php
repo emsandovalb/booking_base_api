@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Language;
 use App\Models\Translation;
 use App\Models\TranslationKey;
+use Illuminate\Database\Seeder;
 
 class LanguageSeeder extends Seeder
 {
@@ -28,7 +28,7 @@ class LanguageSeeder extends Seeder
             );
         }
 
-        $entries = require __DIR__ . '/translations.php';
+        $entries = require __DIR__.'/translations.php';
 
         foreach ($entries as $entry) {
             $key = TranslationKey::updateOrCreate(
@@ -41,7 +41,7 @@ class LanguageSeeder extends Seeder
 
             foreach (($entry['translations'] ?? []) as $code => $value) {
                 $language = $languageModels[$code] ?? null;
-                if (!$language) {
+                if (! $language) {
                     continue;
                 }
                 Translation::updateOrCreate(

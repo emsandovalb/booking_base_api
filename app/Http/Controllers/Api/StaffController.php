@@ -8,6 +8,7 @@ use App\Models\Staff;
 use App\Models\StaffRole;
 use App\Models\StaffService;
 use App\Support\BusinessContext;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class StaffController extends Controller
@@ -15,7 +16,7 @@ class StaffController extends Controller
     public function index(Request $request)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
 
@@ -62,7 +63,7 @@ class StaffController extends Controller
     public function store(Request $request)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
         if ($response = $this->authorizeBusinessAdmin($request, $context)) {
@@ -79,7 +80,7 @@ class StaffController extends Controller
     public function update(Request $request, Staff $staff)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
         if ($response = $this->authorizeBusinessAdmin($request, $context)) {
@@ -101,7 +102,7 @@ class StaffController extends Controller
     public function deactivate(Request $request, Staff $staff)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
         if ($response = $this->authorizeBusinessAdmin($request, $context)) {
@@ -117,7 +118,7 @@ class StaffController extends Controller
     public function attachService(Request $request, Staff $staff)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
         if ($response = $this->authorizeBusinessAdmin($request, $context)) {
@@ -142,7 +143,7 @@ class StaffController extends Controller
 
         $isPrimary = array_key_exists('is_primary', $data)
             ? (bool) $data['is_primary']
-            : !$staff->services()->exists();
+            : ! $staff->services()->exists();
 
         if ($existing) {
             $existing->is_primary = $isPrimary;
@@ -163,7 +164,7 @@ class StaffController extends Controller
     public function detachService(Request $request, Staff $staff, int $resourceId)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
         if ($response = $this->authorizeBusinessAdmin($request, $context)) {
@@ -182,7 +183,7 @@ class StaffController extends Controller
             ->where('court_id', $resource->id)
             ->first();
 
-        if (!$service) {
+        if (! $service) {
             return response()->json(['message' => 'Assignment not found'], 404);
         }
 
@@ -210,26 +211,26 @@ class StaffController extends Controller
         ];
 
         $data = $request->validate($rules);
-        if (!array_key_exists('is_active', $data) && !$partial) {
+        if (! array_key_exists('is_active', $data) && ! $partial) {
             $data['is_active'] = true;
         }
 
         return $data;
     }
 
-    private function authorizeBusinessAdmin(Request $request, BusinessContext $context): ?\Illuminate\Http\JsonResponse
+    private function authorizeBusinessAdmin(Request $request, BusinessContext $context): ?JsonResponse
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
         $business = $context->currentBusiness();
-        if (!$business) {
+        if (! $business) {
             return response()->json(['message' => 'Business not found'], 404);
         }
 
-        if (!$context->userCanManageBusiness($user, $business)) {
+        if (! $context->userCanManageBusiness($user, $business)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -243,7 +244,7 @@ class StaffController extends Controller
 
     private function syncPrimaryService(int $staffId, int $serviceId, bool $isPrimary): void
     {
-        if (!$isPrimary) {
+        if (! $isPrimary) {
             return;
         }
 

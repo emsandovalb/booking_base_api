@@ -66,7 +66,7 @@ class Staff extends Model
 
     public function getAvatarUrlAttribute(): ?string
     {
-        if (!$this->avatar) {
+        if (! $this->avatar) {
             return null;
         }
 

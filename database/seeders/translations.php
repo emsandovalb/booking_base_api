@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 return [
     [
@@ -1856,4 +1856,3 @@ return [
         'translations' => ['en' => 'Could not load teams. Please try again later.', 'es' => 'No se pudieron cargar los equipos. Intenta nuevamente.'],
     ],
 ];
-

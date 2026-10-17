@@ -61,13 +61,13 @@ class BookingTenantScopingTest extends TestCase
         string $name,
         ?StaffRole $role = null,
     ): Staff {
-        $role ??= $this->createRole('consultant-' . uniqid(), 'Consultant');
+        $role ??= $this->createRole('consultant-'.uniqid(), 'Consultant');
 
         $staff = Staff::create([
             'business_id' => $business->id,
             'staff_role_id' => $role->id,
             'name' => $name,
-            'email' => strtolower(str_replace(' ', '.', $name)) . '@example.com',
+            'email' => strtolower(str_replace(' ', '.', $name)).'@example.com',
             'is_active' => true,
         ]);
 
@@ -213,7 +213,7 @@ class BookingTenantScopingTest extends TestCase
         $court = $this->createResource($tresAmigos, 'Tres Amigos Chair');
         $booking = $this->createBookingForUser($user, $court, $tresAmigos);
 
-        $response = $this->getJson('/api/v1/bookings/' . $booking->id, [
+        $response = $this->getJson('/api/v1/bookings/'.$booking->id, [
             'X-Business-Slug' => $salonAurora->slug,
         ]);
 
@@ -228,7 +228,7 @@ class BookingTenantScopingTest extends TestCase
         $court = $this->createResource($tresAmigos, 'Tres Amigos Chair');
         $booking = $this->createBookingForUser($user, $court, $tresAmigos);
 
-        $response = $this->postJson('/api/v1/bookings/' . $booking->id . '/cancel', [], [
+        $response = $this->postJson('/api/v1/bookings/'.$booking->id.'/cancel', [], [
             'X-Business-Slug' => $salonAurora->slug,
         ]);
 
@@ -243,7 +243,7 @@ class BookingTenantScopingTest extends TestCase
         $court = $this->createResource($tresAmigos, 'Tres Amigos Chair');
         $booking = $this->createBookingForUser($user, $court, $tresAmigos);
 
-        $response = $this->postJson('/api/v1/bookings/' . $booking->id . '/rebook', [
+        $response = $this->postJson('/api/v1/bookings/'.$booking->id.'/rebook', [
             'date' => Carbon::now()->addDays(2)->toIso8601String(),
             'time_slot' => '7:00 PM to 8:00 PM',
         ], [
@@ -260,7 +260,7 @@ class BookingTenantScopingTest extends TestCase
         $court = $this->createResource($business, 'Tres Amigos Chair');
         $booking = $this->createBookingForUser($user, $court, $business);
 
-        $response = $this->postJson('/api/v1/bookings/' . $booking->id . '/rebook', [
+        $response = $this->postJson('/api/v1/bookings/'.$booking->id.'/rebook', [
             'date' => Carbon::now()->addDays(2)->startOfDay()->toIso8601String(),
             'time_slot' => '10:00 AM to 11:00 AM',
         ], [

@@ -23,16 +23,16 @@ class TranslationController extends Controller
             $language = Language::where('code', $code)->first();
         }
 
-        if (!$language) {
+        if (! $language) {
             $language = Language::where('is_default', true)->first()
                 ?? Language::orderBy('id')->first();
         }
 
-        if (!$language) {
+        if (! $language) {
             return response()->json([
                 'lang' => $code ?? 'unknown',
                 'version' => 0,
-                'strings' => new \stdClass(),
+                'strings' => new \stdClass,
             ]);
         }
 

@@ -10,11 +10,10 @@ class Event extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'description', 'date', 'price', 'location', 'cover_image'
+        'title', 'description', 'date', 'price', 'location', 'cover_image',
     ];
 
     protected $casts = [
         'date' => 'datetime',
     ];
 }
-

@@ -24,8 +24,10 @@ class BookingAvailabilityService
     public function startFrom(string $date, ?string $timeSlot = null): CarbonImmutable
     {
         $start = CarbonImmutable::parse($date);
-        if ($start->format('H:i') !== '00:00' || blank($timeSlot)) return $start;
-        if (!preg_match('/(\d{1,2}):(\d{2})\s*([AP]M)?/i', $timeSlot, $matches)) {
+        if ($start->format('H:i') !== '00:00' || blank($timeSlot)) {
+            return $start;
+        }
+        if (! preg_match('/(\d{1,2}):(\d{2})\s*([AP]M)?/i', $timeSlot, $matches)) {
             throw new \InvalidArgumentException('Invalid appointment time.');
         }
         $hour = (int) $matches[1];
@@ -33,8 +35,11 @@ class BookingAvailabilityService
         $meridiem = strtoupper($matches[3] ?? '');
         if ($meridiem !== '') {
             $hour %= 12;
-            if ($meridiem === 'PM') $hour += 12;
+            if ($meridiem === 'PM') {
+                $hour += 12;
+            }
         }
+
         return $start->setTime($hour, $minute);
     }
 
@@ -142,6 +147,7 @@ class BookingAvailabilityService
     private function timeMinutes(string $time): int
     {
         [$hour, $minute] = array_pad(array_map('intval', explode(':', $time)), 2, 0);
+
         return ($hour * 60) + $minute;
     }
 }

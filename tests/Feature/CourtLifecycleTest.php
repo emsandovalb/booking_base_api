@@ -68,7 +68,7 @@ class CourtLifecycleTest extends TestCase
             'status' => 'active',
         ]);
 
-        $response = $this->deleteJson('/api/v1/courts/' . $court->id, [], $this->headers($business));
+        $response = $this->deleteJson('/api/v1/courts/'.$court->id, [], $this->headers($business));
         $response->assertOk();
         $response->assertJsonPath('court.status', 'inactive');
 
@@ -137,7 +137,7 @@ class CourtLifecycleTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin']);
         $this->assignMembership($admin, $business, 'owner');
         Sanctum::actingAs($admin);
-        $this->deleteJson('/api/v1/courts/' . $court->id, [], $this->headers($business))->assertOk();
+        $this->deleteJson('/api/v1/courts/'.$court->id, [], $this->headers($business))->assertOk();
 
         // Back as booking owner
         Sanctum::actingAs($user);
@@ -146,9 +146,8 @@ class CourtLifecycleTest extends TestCase
             'time_slot' => '10:00 AM',
         ];
 
-        $rebook = $this->postJson('/api/v1/bookings/' . $bookingId . '/rebook', $rebookPayload, $this->headers($business));
+        $rebook = $this->postJson('/api/v1/bookings/'.$bookingId.'/rebook', $rebookPayload, $this->headers($business));
         $rebook->assertStatus(422);
         $rebook->assertJsonPath('message', 'Selected service does not belong to this business');
     }
 }
-

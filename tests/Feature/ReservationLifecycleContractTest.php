@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Booking;
 use App\Models\Business;
 use App\Models\Court;
 use App\Models\User;
@@ -82,19 +83,19 @@ class ReservationLifecycleContractTest extends TestCase
         ]);
         $day = Carbon::now()->addDays(3)->startOfDay();
 
-        $pending = \App\Models\Booking::create([
+        $pending = Booking::create([
             'user_id' => $customer->id, 'court_id' => $service->id,
             'business_id' => $jcStudio->id, 'date' => $day->copy()->setTime(9, 0),
             'time_slot' => '9:00 AM to 10:00 AM', 'duration_hours' => 1,
             'status' => 'pending', 'booking_code' => 'PENDING1', 'total_price' => 0,
         ]);
-        $confirmed = \App\Models\Booking::create([
+        $confirmed = Booking::create([
             'user_id' => $customer->id, 'court_id' => $service->id,
             'business_id' => $jcStudio->id, 'date' => $day->copy()->setTime(11, 0),
             'time_slot' => '11:00 AM to 12:00 PM', 'duration_hours' => 1,
             'status' => 'confirmed', 'booking_code' => 'CONFIRM1', 'total_price' => 0,
         ]);
-        \App\Models\Booking::create([
+        Booking::create([
             'user_id' => $customer->id, 'court_id' => $service->id,
             'business_id' => $jcStudio->id, 'date' => $day->copy()->addDay()->setTime(9, 0),
             'time_slot' => '9:00 AM to 10:00 AM', 'duration_hours' => 1,

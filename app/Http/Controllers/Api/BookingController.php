@@ -23,7 +23,9 @@ class BookingController extends Controller
     public function index(Request $request)
     {
         $context = $this->context($request);
-        if (!$context) return response()->json(['message' => 'Business not found'], 404);
+        if (! $context) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
 
         $query = Booking::with(['court', 'staff'])->where('user_id', $request->user()->id);
         $context->applyTo($query);
@@ -35,37 +37,46 @@ class BookingController extends Controller
         } elseif (in_array($status, ['cancelled', 'rejected'], true)) {
             $query->where('status', $status);
         }
+
         return $query->latest()->paginate(20);
     }
 
     public function store(Request $request)
     {
         $context = $this->context($request);
-        if (!$context) return response()->json(['message' => 'Business not found'], 404);
-        if (!$request->filled('court_id') && $request->filled('resource_id')) {
+        if (! $context) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+        if (! $request->filled('court_id') && $request->filled('resource_id')) {
             $request->merge(['court_id' => $request->input('resource_id')]);
         }
 
         $data = $this->validatedAppointment($request);
         [$service, $staff, $start] = $this->selection($context, $data);
+
         return $this->schedule($context, $service, $staff, $start, ['user_id' => $request->user()->id]);
     }
 
     public function show(Request $request, Booking $booking)
     {
         $context = $this->context($request);
-        if (!$context) return response()->json(['message' => 'Business not found'], 404);
-        if ($booking->user_id !== $request->user()->id && !$this->canManage($request, $booking, $context)) {
+        if (! $context) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+        if ($booking->user_id !== $request->user()->id && ! $this->canManage($request, $booking, $context)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
+
         return response()->json($booking->load(['court', 'user', 'staff', 'rebookedFrom']));
     }
 
     public function rebook(Request $request, Booking $booking)
     {
         $context = $this->context($request);
-        if (!$context) return response()->json(['message' => 'Business not found'], 404);
-        if ($booking->user_id !== $request->user()->id && !$this->canManage($request, $booking, $context)) {
+        if (! $context) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+        if ($booking->user_id !== $request->user()->id && ! $this->canManage($request, $booking, $context)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
         if ($booking->status !== 'pending') {
@@ -79,6 +90,7 @@ class BookingController extends Controller
         ]);
         $data = $this->validatedAppointment($request);
         [$service, $staff, $start] = $this->selection($context, $data);
+
         return $this->schedule($context, $service, $staff, $start, [
             'user_id' => $booking->user_id,
             'customer_name' => $booking->customer_name,
@@ -91,24 +103,49 @@ class BookingController extends Controller
     public function cancel(Request $request, Booking $booking)
     {
         $context = $this->context($request);
-        if (!$context) return response()->json(['message' => 'Business not found'], 404);
+        if (! $context) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
         $isOwner = $booking->user_id === $request->user()->id;
-        if (!$isOwner && !$this->canManage($request, $booking, $context)) return response()->json(['message' => 'Forbidden'], 403);
-        if (!in_array($booking->status, Booking::BLOCKING_STATUSES, true)) return response()->json(['message' => 'Reservation cannot be cancelled'], 422);
-        if ($isOwner && now()->diffInHours($booking->date, false) < 4) return response()->json(['message' => 'Cannot cancel within 4 hours of the start time'], 422);
+        if (! $isOwner && ! $this->canManage($request, $booking, $context)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        if (! in_array($booking->status, Booking::BLOCKING_STATUSES, true)) {
+            return response()->json(['message' => 'Reservation cannot be cancelled'], 422);
+        }
+        if ($isOwner && now()->diffInHours($booking->date, false) < 4) {
+            return response()->json(['message' => 'Cannot cancel within 4 hours of the start time'], 422);
+        }
+
         return $this->transition($booking, 'cancelled');
     }
 
-    public function confirm(Request $request, Booking $booking) { return $this->adminTransition($request, $booking, 'confirmed'); }
-    public function reject(Request $request, Booking $booking) { return $this->adminTransition($request, $booking, 'rejected'); }
-    public function complete(Request $request, Booking $booking) { return $this->adminTransition($request, $booking, 'completed'); }
+    public function confirm(Request $request, Booking $booking)
+    {
+        return $this->adminTransition($request, $booking, 'confirmed');
+    }
+
+    public function reject(Request $request, Booking $booking)
+    {
+        return $this->adminTransition($request, $booking, 'rejected');
+    }
+
+    public function complete(Request $request, Booking $booking)
+    {
+        return $this->adminTransition($request, $booking, 'completed');
+    }
 
     public function markPaid(Request $request, Booking $booking)
     {
         $context = $this->context($request);
-        if (!$context) return response()->json(['message' => 'Business not found'], 404);
-        if (!$this->canManage($request, $booking, $context)) return response()->json(['message' => 'Forbidden'], 403);
+        if (! $context) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+        if (! $this->canManage($request, $booking, $context)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
         $booking->update(['payment_status' => 'paid']);
+
         return response()->json($booking->load(['court', 'staff']));
     }
 
@@ -133,8 +170,10 @@ class BookingController extends Controller
                     $original = $replacing
                         ? Booking::query()->lockForUpdate()->findOrFail($replacing->id)
                         : null;
-                    if ($original && $original->status !== 'pending') return null;
-                    if (!$this->availability->hasSlot($service, $staff, $start->toDateString(), $start->format('H:i'), $replacing?->id)) {
+                    if ($original && $original->status !== 'pending') {
+                        return null;
+                    }
+                    if (! $this->availability->hasSlot($service, $staff, $start->toDateString(), $start->format('H:i'), $replacing?->id)) {
                         return null;
                     }
 
@@ -142,7 +181,9 @@ class BookingController extends Controller
                     try {
                         // Free the old slot inside this transaction before inserting the
                         // replacement. If insertion fails, the transaction restores it.
-                        if ($original) $original->update(['status' => 'cancelled']);
+                        if ($original) {
+                            $original->update(['status' => 'cancelled']);
+                        }
                         $booking = Booking::create(array_merge($attributes, [
                             'court_id' => $service->id,
                             'business_id' => $context->businessId(),
@@ -157,9 +198,12 @@ class BookingController extends Controller
                             'total_price' => round((float) ($service->price_per_hour ?? 0), 2),
                         ]));
                     } catch (QueryException $exception) {
-                        if ($this->occupiedSlotConflict($exception)) return null;
+                        if ($this->occupiedSlotConflict($exception)) {
+                            return null;
+                        }
                         throw $exception;
                     }
+
                     return $booking;
                 });
             });
@@ -167,7 +211,10 @@ class BookingController extends Controller
             return response()->json(['message' => 'This slot is currently being booked. Please try again.'], 409);
         }
 
-        if (!$booking) return response()->json(['message' => 'Time slot is no longer available'], 422);
+        if (! $booking) {
+            return response()->json(['message' => 'Time slot is no longer available'], 422);
+        }
+
         return response()->json($booking->load(['court', 'staff', 'rebookedFrom']), 201);
     }
 
@@ -186,14 +233,18 @@ class BookingController extends Controller
         $serviceQuery = Court::query()->whereKey($data['court_id'])->where('status', 'active');
         $context->applyTo($serviceQuery);
         $service = $serviceQuery->first();
-        if (!$service) abort(422, 'Selected service does not belong to this business');
+        if (! $service) {
+            abort(422, 'Selected service does not belong to this business');
+        }
 
         $staff = null;
-        if (!empty($data['staff_id'])) {
+        if (! empty($data['staff_id'])) {
             $staffQuery = Staff::query()->whereKey($data['staff_id'])->where('is_active', true);
             $context->applyTo($staffQuery);
             $staff = $staffQuery->whereHas('courts', fn ($query) => $query->whereKey($service->id))->first();
-            if (!$staff) abort(422, 'Staff is not linked to this court');
+            if (! $staff) {
+                abort(422, 'Staff is not linked to this court');
+            }
         }
 
         try {
@@ -201,15 +252,23 @@ class BookingController extends Controller
         } catch (\InvalidArgumentException) {
             abort(422, 'Invalid appointment time');
         }
-        if ($start->isPast()) abort(422, 'Appointments must be scheduled in the future');
+        if ($start->isPast()) {
+            abort(422, 'Appointments must be scheduled in the future');
+        }
+
         return [$service, $staff, $start];
     }
 
     private function adminTransition(Request $request, Booking $booking, string $target)
     {
         $context = $this->context($request);
-        if (!$context) return response()->json(['message' => 'Business not found'], 404);
-        if (!$this->canManage($request, $booking, $context)) return response()->json(['message' => 'Forbidden'], 403);
+        if (! $context) {
+            return response()->json(['message' => 'Business not found'], 404);
+        }
+        if (! $this->canManage($request, $booking, $context)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         return $this->transition($booking, $target);
     }
 
@@ -220,7 +279,9 @@ class BookingController extends Controller
             'completed' => ['confirmed'],
             'cancelled' => ['pending', 'confirmed'],
         };
-        if (!in_array($booking->status, $allowed, true)) return response()->json(['message' => "Reservation cannot be changed from {$booking->status} to {$target}"], 422);
+        if (! in_array($booking->status, $allowed, true)) {
+            return response()->json(['message' => "Reservation cannot be changed from {$booking->status} to {$target}"], 422);
+        }
         // Completing frees the slot for new bookings (see Booking::booted()),
         // which is only correct once the appointment has actually happened —
         // completing it early would let someone else book the same staff
@@ -229,14 +290,18 @@ class BookingController extends Controller
             return response()->json(['message' => 'Cannot mark a reservation completed before its scheduled time'], 422);
         }
         $booking->status = $target;
-        if ($target === 'completed') $booking->completed_at = now();
+        if ($target === 'completed') {
+            $booking->completed_at = now();
+        }
         $booking->save();
+
         return response()->json($booking->load(['court', 'staff']));
     }
 
     private function context(Request $request): ?BusinessContext
     {
         $context = BusinessContext::fromRequest($request);
+
         return $context->isValid() ? $context : null;
     }
 

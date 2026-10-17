@@ -7,9 +7,11 @@ use App\Models\Business;
 use App\Models\Court;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 /**
@@ -35,7 +37,7 @@ class BookingConcurrencyTest extends TestCase
     private function actingAsUser(): User
     {
         $user = User::factory()->create(['role' => 'user']);
-        \Laravel\Sanctum\Sanctum::actingAs($user);
+        Sanctum::actingAs($user);
 
         return $user;
     }
@@ -149,7 +151,7 @@ class BookingConcurrencyTest extends TestCase
             'total_price' => 0,
         ]);
 
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
 
         Booking::create([
             'user_id' => $user->id,

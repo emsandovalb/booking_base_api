@@ -21,7 +21,7 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $context = BusinessContext::fromRequest($request);
-        if ($context->hasSlug() && !$context->isValid()) {
+        if ($context->hasSlug() && ! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
 
@@ -61,7 +61,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $context = BusinessContext::fromRequest($request);
-        if ($context->hasSlug() && !$context->isValid()) {
+        if ($context->hasSlug() && ! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
 
@@ -71,13 +71,14 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('email', $data['email'])->first();
-        if (!$user || !Hash::check($data['password'], $user->password)) {
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
         $token = $user->createToken('mobile')->plainTextToken;
+
         return response()->json([
             'token' => $token,
             'user' => $this->serializeUser($this->withManagedTeams($user), $context),
@@ -88,7 +89,7 @@ class AuthController extends Controller
     {
         $user = $request->user();
         $context = BusinessContext::fromRequest($request);
-        if ($context->hasSlug() && !$context->isValid()) {
+        if ($context->hasSlug() && ! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
 
@@ -103,6 +104,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
+
         return response()->json(['message' => 'Logged out']);
     }
 
@@ -122,7 +124,7 @@ class AuthController extends Controller
         }
 
         // Keep backward compatibility: if first/last provided, update name too
-        if (!empty($data['first_name']) || !empty($data['last_name'])) {
+        if (! empty($data['first_name']) || ! empty($data['last_name'])) {
             $fn = $data['first_name'] ?? $user->first_name ?? '';
             $ln = $data['last_name'] ?? $user->last_name ?? '';
             $data['name'] = trim($fn.' '.$ln) ?: ($data['name'] ?? $user->name);
@@ -133,6 +135,7 @@ class AuthController extends Controller
         $user->refresh();
         $this->withManagedTeams($user);
         $user->avatar_url = $user->avatar ? Storage::url($user->avatar) : null;
+
         return response()->json(['user' => $user]);
     }
 
@@ -144,13 +147,14 @@ class AuthController extends Controller
         ]);
 
         $user = $request->user();
-        if (!Hash::check($data['current_password'], $user->password)) {
+        if (! Hash::check($data['current_password'], $user->password)) {
             throw ValidationException::withMessages([
                 'current_password' => ['Current password is incorrect'],
             ]);
         }
         $user->password = Hash::make($data['new_password']);
         $user->save();
+
         return response()->json(['message' => 'Password updated']);
     }
 
@@ -192,17 +196,17 @@ class AuthController extends Controller
 
     private function resolveCurrentBusiness(User $user, ?BusinessContext $context): ?Business
     {
-        if (!$context?->hasSlug()) {
+        if (! $context?->hasSlug()) {
             return null;
         }
 
         $business = $context->currentBusiness();
-        if (!$business) {
+        if (! $business) {
             return null;
         }
 
         $membership = $user->activeBusinessMembership($business);
-        if (!$membership) {
+        if (! $membership) {
             return null;
         }
 
@@ -221,8 +225,15 @@ class AuthController extends Controller
 
     public function forgotPassword(Request $request)
     {
+        // No `exists` rule and the same answer whether or not the account
+        // exists, so this endpoint can't be used to discover which emails
+        // are registered.
         $data = $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => 'required|email',
+        ]);
+
+        $genericResponse = response()->json([
+            'message' => 'If an account exists for that email, a password reset link has been sent.',
         ]);
 
         try {
@@ -243,14 +254,9 @@ class AuthController extends Controller
                 'email' => $data['email'],
                 'status' => $status,
             ]);
-
-            return response()->json([
-                'message' => __($status),
-                'errors' => ['email' => [__($status)]],
-            ], 422);
         }
 
-        return response()->json(['message' => __($status)]);
+        return $genericResponse;
     }
 
     public function resetPassword(Request $request)

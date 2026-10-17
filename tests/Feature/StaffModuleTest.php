@@ -72,7 +72,7 @@ class StaffModuleTest extends TestCase
             'is_primary' => true,
         ]);
 
-        $response = $this->getJson('/api/v1/staff/' . $staff->id, $this->headers($business));
+        $response = $this->getJson('/api/v1/staff/'.$staff->id, $this->headers($business));
 
         $response->assertOk();
         $response->assertJsonPath('id', $staff->id);
@@ -112,7 +112,7 @@ class StaffModuleTest extends TestCase
             'is_primary' => true,
         ]);
 
-        $response = $this->getJson('/api/v1/resources/' . $resource->id . '/staff', $this->headers($business));
+        $response = $this->getJson('/api/v1/resources/'.$resource->id.'/staff', $this->headers($business));
 
         $response->assertOk();
         $response->assertJsonCount(1, 'data');
@@ -163,7 +163,7 @@ class StaffModuleTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->patchJson('/api/v1/staff/' . $staff->id, [
+        $response = $this->patchJson('/api/v1/staff/'.$staff->id, [
             'name' => 'Updated Barber',
             'email' => 'updated@example.com',
             'staff_role_id' => $alternateRole->id,
@@ -196,7 +196,7 @@ class StaffModuleTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->patchJson('/api/v1/staff/' . $staff->id . '/deactivate', [], $this->headers($business));
+        $response = $this->patchJson('/api/v1/staff/'.$staff->id.'/deactivate', [], $this->headers($business));
 
         $response->assertOk();
         $response->assertJsonPath('is_active', false);
@@ -221,7 +221,7 @@ class StaffModuleTest extends TestCase
         ]);
         $resource = Court::factory()->create(['business_id' => $business->id]);
 
-        $response = $this->postJson('/api/v1/staff/' . $staff->id . '/services', [
+        $response = $this->postJson('/api/v1/staff/'.$staff->id.'/services', [
             'resource_id' => $resource->id,
         ], $this->headers($business));
 
@@ -252,7 +252,7 @@ class StaffModuleTest extends TestCase
             'is_primary' => true,
         ]);
 
-        $response = $this->deleteJson('/api/v1/staff/' . $staff->id . '/services/' . $resource->id, [], $this->headers($business));
+        $response = $this->deleteJson('/api/v1/staff/'.$staff->id.'/services/'.$resource->id, [], $this->headers($business));
 
         $response->assertOk();
         $this->assertDatabaseMissing('staff_services', [
@@ -282,20 +282,20 @@ class StaffModuleTest extends TestCase
         ], $this->headers($business));
         $createResponse->assertStatus(403);
 
-        $updateResponse = $this->patchJson('/api/v1/staff/' . $staff->id, [
+        $updateResponse = $this->patchJson('/api/v1/staff/'.$staff->id, [
             'name' => 'Blocked Update',
         ], $this->headers($business));
         $updateResponse->assertStatus(403);
 
-        $deactivateResponse = $this->patchJson('/api/v1/staff/' . $staff->id . '/deactivate', [], $this->headers($business));
+        $deactivateResponse = $this->patchJson('/api/v1/staff/'.$staff->id.'/deactivate', [], $this->headers($business));
         $deactivateResponse->assertStatus(403);
 
-        $assignResponse = $this->postJson('/api/v1/staff/' . $staff->id . '/services', [
+        $assignResponse = $this->postJson('/api/v1/staff/'.$staff->id.'/services', [
             'resource_id' => $resource->id,
         ], $this->headers($business));
         $assignResponse->assertStatus(403);
 
-        $removeResponse = $this->deleteJson('/api/v1/staff/' . $staff->id . '/services/' . $resource->id, [], $this->headers($business));
+        $removeResponse = $this->deleteJson('/api/v1/staff/'.$staff->id.'/services/'.$resource->id, [], $this->headers($business));
         $removeResponse->assertStatus(403);
     }
 
@@ -321,7 +321,7 @@ class StaffModuleTest extends TestCase
 
         $staffId = $createResponse->json('id');
 
-        $updateResponse = $this->patchJson('/api/v1/staff/' . $staffId, [
+        $updateResponse = $this->patchJson('/api/v1/staff/'.$staffId, [
             'name' => 'Owner Barber Updated',
             'staff_role_id' => $role->id,
         ], [
@@ -331,7 +331,7 @@ class StaffModuleTest extends TestCase
         $updateResponse->assertOk();
         $updateResponse->assertJsonPath('name', 'Owner Barber Updated');
 
-        $deactivateResponse = $this->patchJson('/api/v1/staff/' . $staffId . '/deactivate', [], [
+        $deactivateResponse = $this->patchJson('/api/v1/staff/'.$staffId.'/deactivate', [], [
             'X-Business-Slug' => $business->slug,
         ]);
 

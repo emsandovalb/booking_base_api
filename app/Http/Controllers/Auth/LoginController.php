@@ -22,7 +22,7 @@ class LoginController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()
                 ->withErrors([
                     'email' => 'Las credenciales no son válidas.',

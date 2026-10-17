@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BusinessClosure;
 use App\Models\Staff;
 use App\Support\BusinessContext;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class BusinessClosureController extends Controller
@@ -13,7 +14,7 @@ class BusinessClosureController extends Controller
     public function index(Request $request)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
 
@@ -35,7 +36,7 @@ class BusinessClosureController extends Controller
     public function store(Request $request)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
         if ($response = $this->authorizeBusinessAdmin($request, $context)) {
@@ -48,10 +49,10 @@ class BusinessClosureController extends Controller
             'reason' => ['nullable', 'string', 'max:255'],
         ]);
 
-        if (!empty($data['staff_id'])) {
+        if (! empty($data['staff_id'])) {
             $staffQuery = Staff::query()->whereKey($data['staff_id']);
             $context->applyTo($staffQuery);
-            if (!$staffQuery->exists()) {
+            if (! $staffQuery->exists()) {
                 return response()->json(['message' => 'Selected staff does not belong to this business'], 422);
             }
         }
@@ -74,7 +75,7 @@ class BusinessClosureController extends Controller
     public function destroy(Request $request, BusinessClosure $closure)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
         if ($response = $this->authorizeBusinessAdmin($request, $context)) {
@@ -86,14 +87,14 @@ class BusinessClosureController extends Controller
         return response()->json(['message' => 'Closure removed']);
     }
 
-    private function authorizeBusinessAdmin(Request $request, BusinessContext $context): ?\Illuminate\Http\JsonResponse
+    private function authorizeBusinessAdmin(Request $request, BusinessContext $context): ?JsonResponse
     {
         $user = $request->user();
         $business = $context->currentBusiness();
-        if (!$business) {
+        if (! $business) {
             return response()->json(['message' => 'Business not found'], 404);
         }
-        if (!$context->userCanManageBusiness($user, $business)) {
+        if (! $context->userCanManageBusiness($user, $business)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

@@ -47,7 +47,7 @@ class AuditLog extends Model
 
     public function scopeForBusiness($query, ?Business $business)
     {
-        if (!$business) {
+        if (! $business) {
             return $query;
         }
 
@@ -56,7 +56,7 @@ class AuditLog extends Model
 
     public function scopeActionIs($query, ?string $action)
     {
-        if (!$action) {
+        if (! $action) {
             return $query;
         }
 
@@ -65,7 +65,7 @@ class AuditLog extends Model
 
     public function scopeUserIs($query, mixed $userId)
     {
-        if (!$userId) {
+        if (! $userId) {
             return $query;
         }
 
@@ -74,7 +74,7 @@ class AuditLog extends Model
 
     public function scopeOnDate($query, ?string $date)
     {
-        if (!$date) {
+        if (! $date) {
             return $query;
         }
 

@@ -48,6 +48,8 @@ Complete [real-device verification](docs/REAL_DEVICE_VERIFICATION.md) on the pro
 
 ## Production baseline
 
+Backups and the monthly restore drill are described in [docs/BACKUPS.md](docs/BACKUPS.md).
+
 Set `APP_ENV=production`, `APP_DEBUG=false`, a strong `APP_KEY`, and the exact HTTPS `APP_URL`. Configure persistent database/cache drivers, trusted proxy forwarding, mail delivery, backups, and HTTPS before onboarding.
 
 ```bash

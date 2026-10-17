@@ -66,7 +66,7 @@ class MassAssignmentGuardTest extends TestCase
     {
         $business = Business::create([
             'name' => 'Barberia Tres Amigos',
-            'slug' => 'barberia-tres-amigos-' . uniqid(),
+            'slug' => 'barberia-tres-amigos-'.uniqid(),
             'business_type' => 'barbershop',
             'status' => 'active',
         ]);

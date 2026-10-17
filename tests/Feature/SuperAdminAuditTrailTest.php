@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\AuditLog;
 use App\Models\Business;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -237,7 +236,7 @@ class SuperAdminAuditTrailTest extends TestCase
         $this->actingAs($admin)->patch(route('super-admin.businesses.activate', $business));
 
         $this->actingAs($admin)
-            ->get(route('super-admin.businesses.show', $business) . '?action=business.suspended')
+            ->get(route('super-admin.businesses.show', $business).'?action=business.suspended')
             ->assertOk()
             ->assertSee('Super Admin suspended')
             ->assertDontSee('Super Admin activated');

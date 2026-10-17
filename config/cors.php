@@ -25,7 +25,8 @@ return [
     'allowed_origins' => $allowedOrigins,
     'allowed_origins_patterns' => $allowedOriginPatterns,
     'allowed_headers' => ['*'],
-    'exposed_headers' => [],
+    // ETag lets browser clients revalidate cached branding config.
+    'exposed_headers' => ['ETag'],
     'max_age' => 0,
     'supports_credentials' => false,
 ];

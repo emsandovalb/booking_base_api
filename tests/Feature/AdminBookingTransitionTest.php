@@ -140,7 +140,7 @@ class AdminBookingTransitionTest extends TestCase
         return Booking::create([
             'user_id' => $client->id, 'court_id' => $court->id, 'business_id' => $business->id,
             'date' => $date, 'time_slot' => '10:00 AM to 11:00 AM', 'duration_hours' => 1,
-            'status' => $status, 'booking_code' => 'BK' . Booking::count() . 'X', 'total_price' => 100,
+            'status' => $status, 'booking_code' => 'BK'.Booking::count().'X', 'total_price' => 100,
         ]);
     }
 
