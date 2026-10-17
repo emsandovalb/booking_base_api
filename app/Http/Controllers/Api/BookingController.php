@@ -8,19 +8,19 @@ use App\Models\Business;
 use App\Models\Court;
 use App\Models\Staff;
 use App\Services\BookingAvailabilityService;
+use App\Services\BookingScheduler;
 use App\Services\SuperAdmin\AuditLogService;
 use App\Support\BusinessContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Cache\LockTimeoutException;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
-    public function __construct(private readonly BookingAvailabilityService $availability) {}
+    public function __construct(
+        private readonly BookingAvailabilityService $availability,
+        private readonly BookingScheduler $scheduler,
+    ) {}
 
     public function index(Request $request)
     {
@@ -134,59 +134,8 @@ class BookingController extends Controller
 
     private function schedule(BusinessContext $context, Court $service, ?Staff $staff, CarbonImmutable $start, array $attributes, ?Booking $replacing = null)
     {
-        // Businesses that don't use staff selection (reservation_staff_selection
-        // feature flag off) still book directly against the service/court, so
-        // the scarce resource being locked is the staff member when one is
-        // selected, or the court/service itself when it isn't. The court-only
-        // key intentionally matches the pre-existing "booking-lock:court:{id}"
-        // format so it keeps interoperating with any caller still using it.
-        $lockKey = $staff
-            ? "booking-lock:business:{$context->businessId()}:staff:{$staff->id}"
-            : "booking-lock:court:{$service->id}";
-        $lock = Cache::lock($lockKey, 10);
         try {
-            $booking = $lock->block(3, function () use ($context, $service, $staff, $start, $attributes, $replacing) {
-                return DB::transaction(function () use ($context, $service, $staff, $start, $attributes, $replacing) {
-                    if ($staff) {
-                        Staff::query()->whereKey($staff->id)->lockForUpdate()->firstOrFail();
-                    }
-                    $original = $replacing
-                        ? Booking::query()->lockForUpdate()->findOrFail($replacing->id)
-                        : null;
-                    // The status checked before taking the lock must still hold.
-                    if ($original && $original->status !== $replacing->status) return null;
-                    if (!$this->availability->hasSlot($service, $staff, $start->toDateString(), $start->format('H:i'), $replacing?->id)) {
-                        return null;
-                    }
-
-                    $minutes = $this->availability->durationMinutes($service);
-                    try {
-                        // Free the old slot inside this transaction before inserting the
-                        // replacement. If insertion fails, the transaction restores it.
-                        if ($original) $original->update(['status' => 'cancelled']);
-                        $booking = Booking::create(array_merge([
-                            'status' => 'pending',
-                            'payment_status' => 'unpaid',
-                        ], $attributes, [
-                            'court_id' => $service->id,
-                            'business_id' => $context->businessId(),
-                            'staff_id' => $staff?->id,
-                            'date' => $start,
-                            'time_slot' => $this->availability->slotLabel($start, $service),
-                            'duration_hours' => max(1, (int) ceil($minutes / 60)),
-                            'duration_minutes' => $minutes,
-                            'booking_code' => Str::upper(Str::random(8)),
-                            // Server-side only. price_per_hour is a legacy column
-                            // name: it holds the service's flat price per appointment.
-                            'total_price' => round((float) ($service->price_per_hour ?? 0), 2),
-                        ]));
-                    } catch (QueryException $exception) {
-                        if ($this->occupiedSlotConflict($exception)) return null;
-                        throw $exception;
-                    }
-                    return $booking;
-                });
-            });
+            $booking = $this->scheduler->book($context->businessId(), $service, $staff, $start, $attributes, $replacing);
         } catch (LockTimeoutException) {
             return response()->json(['message' => 'This slot is currently being booked. Please try again.'], 409);
         }
@@ -283,9 +232,4 @@ class BookingController extends Controller
             && $context->userCanManageBusiness($request->user(), $booking->business);
     }
 
-    private function occupiedSlotConflict(QueryException $exception): bool
-    {
-        return str_contains($exception->getMessage(), 'bookings_occupancy_slot_unique')
-            || str_contains($exception->getMessage(), 'occupied_slot_at');
-    }
 }

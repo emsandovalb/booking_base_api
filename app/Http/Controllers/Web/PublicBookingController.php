@@ -3,24 +3,24 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Booking;
 use App\Models\Business;
-use App\Models\Staff;
 use App\Services\BookingAvailabilityService;
+use App\Services\BookingScheduler;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class PublicBookingController extends Controller
 {
-    public function __construct(private readonly BookingAvailabilityService $availability) {}
+    public function __construct(
+        private readonly BookingAvailabilityService $availability,
+        private readonly BookingScheduler $scheduler,
+    ) {}
 
     public function show(string $slug): View
     {
@@ -61,40 +61,15 @@ class PublicBookingController extends Controller
         ]);
         [$service, $staff] = $this->selection($business, $data['service_id'], $data['staff_id']);
 
-        // Shared key with API and owner-side rescheduling: every entry point
-        // competes for the same professional's calendar lock.
-        $lock = Cache::lock("booking-lock:business:{$business->id}:staff:{$staff->id}", 10);
+        $start = CarbonImmutable::createFromFormat('Y-m-d H:i', "{$data['date']} {$data['time']}");
         try {
-            $booking = $lock->block(3, function () use ($business, $service, $staff, $data) {
-                return DB::transaction(function () use ($business, $service, $staff, $data) {
-                    Staff::query()->whereKey($staff->id)->lockForUpdate()->first();
-                    if (! $this->availability->hasSlot($service, $staff, $data['date'], $data['time'])) {
-                        return null;
-                    }
-
-                    $start = CarbonImmutable::createFromFormat('Y-m-d H:i', "{$data['date']} {$data['time']}");
-                    $minutes = max(10, (int) ($service->duration_minutes ?: (($service->duration_hours ?: 1) * 60)));
-                    $end = $start->addMinutes($minutes);
-
-                    return Booking::create([
-                        'user_id' => null,
-                        'customer_name' => trim($data['customer_name']),
-                        'customer_phone' => trim($data['customer_phone']),
-                        'customer_email' => $data['customer_email'] ?? null,
-                        'court_id' => $service->id,
-                        'business_id' => $business->id,
-                        'staff_id' => $staff->id,
-                        'date' => $start,
-                        'time_slot' => $start->format('g:i A').' to '.$end->format('g:i A'),
-                        'duration_hours' => max(1, (int) ceil($minutes / 60)),
-                        'duration_minutes' => $minutes,
-                        'status' => 'pending',
-                        'booking_code' => Str::upper(Str::random(8)),
-                        'public_token' => (string) Str::uuid(),
-                        'total_price' => $service->price_per_hour,
-                    ]);
-                });
-            });
+            $booking = $this->scheduler->book($business->id, $service, $staff, $start, [
+                'user_id' => null,
+                'customer_name' => trim($data['customer_name']),
+                'customer_phone' => trim($data['customer_phone']),
+                'customer_email' => $data['customer_email'] ?? null,
+                'public_token' => (string) Str::uuid(),
+            ]);
         } catch (LockTimeoutException) {
             $booking = null;
         }

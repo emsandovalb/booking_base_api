@@ -6,18 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Business;
 use App\Models\StaffRole;
 use App\Services\BookingAvailabilityService;
+use App\Services\BookingScheduler;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class BusinessAppController extends Controller
 {
-    public function __construct(private readonly BookingAvailabilityService $availability) {}
+    public function __construct(
+        private readonly BookingAvailabilityService $availability,
+        private readonly BookingScheduler $scheduler,
+    ) {}
 
     public function home(Request $request, string $slug): View
     {
@@ -81,43 +82,17 @@ class BusinessAppController extends Controller
             ? 'Las citas confirmadas solo se pueden reprogramar con al menos 24 horas de anticipación'
             : 'Solo se pueden reprogramar citas pendientes o confirmadas');
         $start = CarbonImmutable::createFromFormat('Y-m-d H:i', "{$data['date']} {$data['time']}");
-        $lock = Cache::lock("booking-lock:business:{$business->id}:staff:{$item->staff_id}", 10);
         try {
-            $replacement = $lock->block(3, function () use ($business, $item, $start) {
-                return DB::transaction(function () use ($business, $item, $start) {
-                    $locked = $business->bookings()->whereKey($item->id)->lockForUpdate()->first();
-                    if (! $locked || $locked->status !== $item->status) {
-                        return null;
-                    }
-                    if (! $this->availability->hasSlot($item->court, $item->staff, $start->toDateString(), $start->format('H:i'), $item->id)) {
-                        return null;
-                    }
-                    $minutes = $this->availability->durationMinutes($item->court);
-                    // This is atomic with the insert; a failed replacement restores the
-                    // old booking instead of losing the appointment.
-                    $previousStatus = $item->status;
-                    $item->update(['status' => 'cancelled']);
-                    $replacement = $business->bookings()->create([
-                        'user_id' => $item->user_id,
-                        'customer_name' => $item->customer_name,
-                        'customer_phone' => $item->customer_phone,
-                        'customer_email' => $item->customer_email,
-                        'court_id' => $item->court_id,
-                        'staff_id' => $item->staff_id,
-                        'rebooked_from_booking_id' => $item->id,
-                        'date' => $start,
-                        'time_slot' => $this->availability->slotLabel($start, $item->court),
-                        'duration_hours' => max(1, (int) ceil($minutes / 60)),
-                        'duration_minutes' => $minutes,
-                        // Moving an appointment keeps its confirmation and payment.
-                        'status' => $previousStatus,
-                        'payment_status' => $item->payment_status,
-                        'booking_code' => Str::upper(Str::random(8)),
-                        'total_price' => round((float) $item->court->price_per_hour, 2),
-                    ]);
-                    return $replacement;
-                });
-            });
+            // Moving an appointment keeps its customer, confirmation and payment.
+            $replacement = $this->scheduler->book($business->id, $item->court, $item->staff, $start, [
+                'user_id' => $item->user_id,
+                'customer_name' => $item->customer_name,
+                'customer_phone' => $item->customer_phone,
+                'customer_email' => $item->customer_email,
+                'rebooked_from_booking_id' => $item->id,
+                'status' => $item->status,
+                'payment_status' => $item->payment_status,
+            ], $item);
         } catch (LockTimeoutException) {
             $replacement = null;
         }
