@@ -139,6 +139,30 @@ class BusinessTimezoneTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_cancellation_window_follows_the_business_policy(): void
+    {
+        $this->travelTo(CarbonImmutable::parse(self::MORNING_UTC, 'UTC'));
+        [$business, $service, $staff] = $this->catalog('America/Costa_Rica');
+        $client = User::factory()->create();
+        Sanctum::actingAs($client);
+        $headers = ['X-Business-Slug' => $business->slug];
+
+        // Ten hours ahead of the local 10:00.
+        $business->update(['app_config' => ['policies' => ['cancellation_window_hours' => 24]]]);
+        $strict = $this->booking($business, $service, $staff, $client, '2026-10-20 20:00:00');
+        $this->postJson("/api/v1/reservations/{$strict->id}/cancel", [], $headers)
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Cannot cancel within 24 hours of the start time');
+
+        $business->update(['app_config' => ['policies' => ['cancellation_window_hours' => 2]]]);
+        $this->postJson("/api/v1/reservations/{$strict->id}/cancel", [], $headers)
+            ->assertOk();
+
+        // Without a policy the platform default (4 hours) applies.
+        $business->update(['app_config' => null]);
+        $this->assertSame(4, $business->fresh()->cancellationWindowHours());
+    }
+
     public function test_app_configs_expose_the_business_timezone(): void
     {
         [$business] = $this->catalog('America/Costa_Rica');

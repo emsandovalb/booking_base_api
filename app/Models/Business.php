@@ -131,6 +131,21 @@ class Business extends Model
     }
 
     /**
+     * Hours before the start during which a customer can no longer cancel,
+     * as set by the owner (Super Admin "Cancellation window"). Falls back to
+     * the platform default when the business never set one.
+     */
+    public function cancellationWindowHours(): int
+    {
+        $value = data_get($this->app_config, 'policies.cancellation_window_hours');
+        if (is_numeric($value) && (int) $value >= 0) {
+            return (int) $value;
+        }
+
+        return (int) config('white_label.policies.cancellation_window_hours', 4);
+    }
+
+    /**
      * Current offset for clients without a timezone database (Flutter).
      * Sent with every config fetch, so DST changes are picked up on refresh.
      */

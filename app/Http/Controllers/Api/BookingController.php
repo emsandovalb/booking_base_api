@@ -101,7 +101,10 @@ class BookingController extends Controller
         $isOwner = $booking->user_id === $request->user()->id;
         if (!$isOwner && !$this->canManage($request, $booking, $context)) return response()->json(['message' => 'Forbidden'], 403);
         if (!in_array($booking->status, Booking::BLOCKING_STATUSES, true)) return response()->json(['message' => 'Reservation cannot be cancelled'], 422);
-        if ($isOwner && $context->business()->localNow()->diffInHours($booking->date, false) < 4) return response()->json(['message' => 'Cannot cancel within 4 hours of the start time'], 422);
+        $window = $context->business()->cancellationWindowHours();
+        if ($isOwner && $context->business()->localNow()->diffInHours($booking->date, false) < $window) {
+            return response()->json(['message' => "Cannot cancel within {$window} hours of the start time"], 422);
+        }
         return $this->transition($booking, 'cancelled');
     }
 
