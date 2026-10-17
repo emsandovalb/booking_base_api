@@ -558,6 +558,7 @@ class BrandingConfig
     public static function normalizedType(?string $businessType): string
     {
         $type = strtolower(trim((string) $businessType));
+
         return $type !== '' ? $type : 'generic';
     }
 
@@ -569,6 +570,7 @@ class BrandingConfig
     public static function normalizeThemePreset(mixed $preset, string $fallback = 'generic_dark'): string
     {
         $value = strtolower(trim((string) $preset));
+
         return in_array($value, self::supportedThemePresets(), true) ? $value : $fallback;
     }
 
@@ -754,6 +756,7 @@ class BrandingConfig
     private static function secondaryTextFor(string $textPrimary, string $background): string
     {
         $base = self::bestTextFor($background);
+
         return $textPrimary === '#FFFFFF'
             ? self::mixColor($base, '#FFFFFF', 0.72)
             : self::mixColor($base, '#000000', 0.58);
@@ -762,6 +765,7 @@ class BrandingConfig
     private static function borderColorFor(string $background, string $surface): string
     {
         $text = self::bestTextFor($background);
+
         return self::mixColor($surface, $text, 0.14);
     }
 
@@ -786,7 +790,7 @@ class BrandingConfig
             $normalized = substr($normalized, 2);
         }
         if (strlen($normalized) === 3) {
-            $normalized = implode('', array_map(static fn ($char) => $char . $char, str_split($normalized)));
+            $normalized = implode('', array_map(static fn ($char) => $char.$char, str_split($normalized)));
         }
 
         return [
@@ -801,6 +805,7 @@ class BrandingConfig
         [$r, $g, $b] = self::hexToRgb($hex);
         $transform = static function (int $channel): float {
             $value = $channel / 255;
+
             return $value <= 0.03928
                 ? $value / 12.92
                 : pow(($value + 0.055) / 1.055, 2.4);
@@ -826,6 +831,7 @@ class BrandingConfig
         }
 
         $text = trim((string) $value);
+
         return $text === '' ? null : $text;
     }
 
@@ -866,6 +872,7 @@ class BrandingConfig
     private static function boundedNumber(mixed $value, int $min, int $max, int $fallback): int
     {
         $parsed = self::integerOrNull($value) ?? $fallback;
+
         return max($min, min($max, $parsed));
     }
 
@@ -876,6 +883,7 @@ class BrandingConfig
         }
 
         $text = strtolower(trim((string) $value));
+
         return in_array($text, ['1', 'true', 'yes', 'on'], true);
     }
 
@@ -890,6 +898,6 @@ class BrandingConfig
             return null;
         }
 
-        return str_starts_with($text, '#') ? strtoupper($text) : '#' . strtoupper($text);
+        return str_starts_with($text, '#') ? strtoupper($text) : '#'.strtoupper($text);
     }
 }

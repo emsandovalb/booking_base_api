@@ -66,7 +66,7 @@ class TeamController extends Controller
 
     public function update(Request $request, Team $team)
     {
-        if (!$this->canManageTeam($request, $team)) {
+        if (! $this->canManageTeam($request, $team)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -92,7 +92,7 @@ class TeamController extends Controller
     private function canManageTeam(Request $request, Team $team): bool
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -108,7 +108,7 @@ class TeamController extends Controller
 
     private function storeLogo(Request $request, array &$data, ?Team $existing = null): void
     {
-        if (!$request->hasFile('logo')) {
+        if (! $request->hasFile('logo')) {
             return;
         }
 

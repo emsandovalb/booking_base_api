@@ -85,7 +85,7 @@ class BusinessMemberController extends Controller
                 'password' => $data['temporary_password'],
             ]);
 
-            if (!$existingUser) {
+            if (! $existingUser) {
                 $auditLogService->record(
                     $business,
                     $request->user(),
@@ -259,7 +259,7 @@ class BusinessMemberController extends Controller
             'metadata' => ['nullable', 'json'],
         ]);
 
-        if (!User::query()->where('email', $data['email'])->exists() && empty($data['temporary_password'])) {
+        if (! User::query()->where('email', $data['email'])->exists() && empty($data['temporary_password'])) {
             throw ValidationException::withMessages([
                 'temporary_password' => 'Temporary password is required for new users.',
             ]);
@@ -317,11 +317,11 @@ class BusinessMemberController extends Controller
             'status' => $status,
         ];
 
-        if ($status === 'active' && !$member->pivot->accepted_at) {
+        if ($status === 'active' && ! $member->pivot->accepted_at) {
             $payload['accepted_at'] = now();
         }
 
-        if ($status === 'pending' && !$member->pivot->invited_at) {
+        if ($status === 'pending' && ! $member->pivot->invited_at) {
             $payload['invited_at'] = now();
         }
 
@@ -334,7 +334,7 @@ class BusinessMemberController extends Controller
             ->whereKey($user->id)
             ->first();
 
-        abort_if(!$member, 404);
+        abort_if(! $member, 404);
 
         return $member;
     }

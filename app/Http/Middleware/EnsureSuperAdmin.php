@@ -12,7 +12,7 @@ class EnsureSuperAdmin
     {
         $user = $request->user();
 
-        if (!$user || !$user->isSuperAdmin()) {
+        if (! $user || ! $user->isSuperAdmin()) {
             abort(403, 'Super Admin access is restricted.');
         }
 

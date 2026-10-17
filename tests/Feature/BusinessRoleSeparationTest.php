@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Booking;
 use App\Models\Business;
 use App\Models\Court;
-use App\Models\Staff;
 use App\Models\StaffRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -46,7 +46,7 @@ class BusinessRoleSeparationTest extends TestCase
         Sanctum::actingAs($admin);
         $business = $this->createBusiness();
         $this->assignMembership($admin, $business, 'admin');
-        $role = StaffRole::create(['name' => 'Barber', 'slug' => 'barber-' . uniqid(), 'description' => 'Barber']);
+        $role = StaffRole::create(['name' => 'Barber', 'slug' => 'barber-'.uniqid(), 'description' => 'Barber']);
 
         $response = $this->postJson('/api/v1/staff', [
             'name' => 'Managed Barber',
@@ -104,7 +104,7 @@ class BusinessRoleSeparationTest extends TestCase
         $superAdmin = User::factory()->create(['role' => 'user', 'is_super_admin' => true]);
         Sanctum::actingAs($superAdmin);
         $business = $this->createBusiness();
-        $role = StaffRole::create(['name' => 'Barber', 'slug' => 'barber-' . uniqid(), 'description' => 'Barber']);
+        $role = StaffRole::create(['name' => 'Barber', 'slug' => 'barber-'.uniqid(), 'description' => 'Barber']);
 
         $response = $this->postJson('/api/v1/staff', [
             'name' => 'Platform Barber',
@@ -120,7 +120,7 @@ class BusinessRoleSeparationTest extends TestCase
         $client = User::factory()->create(['role' => 'user']);
         $business = $this->createBusiness();
         $court = Court::factory()->create(['business_id' => $business->id, 'status' => 'active']);
-        $booking = \App\Models\Booking::create([
+        $booking = Booking::create([
             'user_id' => $client->id,
             'court_id' => $court->id,
             'business_id' => $business->id,
@@ -133,7 +133,7 @@ class BusinessRoleSeparationTest extends TestCase
         ]);
         Sanctum::actingAs($superAdmin);
 
-        $response = $this->postJson('/api/v1/bookings/' . $booking->id . '/confirm', [], $this->headers($business));
+        $response = $this->postJson('/api/v1/bookings/'.$booking->id.'/confirm', [], $this->headers($business));
 
         $response->assertStatus(403);
         $this->assertDatabaseHas('bookings', ['id' => $booking->id, 'status' => 'pending']);
@@ -172,7 +172,7 @@ class BusinessRoleSeparationTest extends TestCase
     {
         return Business::create([
             'name' => 'Barberia Tres Amigos',
-            'slug' => 'barberia-tres-amigos-' . uniqid(),
+            'slug' => 'barberia-tres-amigos-'.uniqid(),
             'business_type' => 'barbershop',
             'status' => 'active',
         ]);

@@ -3,30 +3,29 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Court;
 use App\Models\Booking;
+use App\Models\Court;
 use App\Models\Staff;
 use App\Services\BookingAvailabilityService;
 use App\Support\BusinessContext;
 use App\Support\CaseInsensitiveSearch;
+use Carbon\Carbon;
+use Carbon\CarbonImmutable;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Carbon\Carbon;
-use Carbon\CarbonImmutable;
 
 class CourtController extends Controller
 {
-    public function __construct(private readonly BookingAvailabilityService $availability)
-    {
-    }
+    public function __construct(private readonly BookingAvailabilityService $availability) {}
 
     public function index(Request $request)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
 
@@ -53,21 +52,28 @@ class CourtController extends Controller
             $q->where('price_per_hour', '<=', (float) $max);
         }
         if ($sort = $request->query('sort')) {
-            if ($sort === 'rating') $q->orderByDesc('rating');
-            if ($sort === 'price_asc') $q->orderBy('price_per_hour');
-            if ($sort === 'price_desc') $q->orderByDesc('price_per_hour');
+            if ($sort === 'rating') {
+                $q->orderByDesc('rating');
+            }
+            if ($sort === 'price_asc') {
+                $q->orderBy('price_per_hour');
+            }
+            if ($sort === 'price_desc') {
+                $q->orderByDesc('price_per_hour');
+            }
         } else {
             $q->latest();
         }
         $perPage = $this->perPageFromRequest($request);
         $result = $q->paginate($perPage)->withQueryString();
+
         return $this->paginatedResponse($result);
     }
 
     public function reservationsForDay(Request $request)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
         if ($response = $this->authorizeBusinessAdmin($request, $context)) {
@@ -85,35 +91,37 @@ class CourtController extends Controller
             ->whereBetween('date', [$start, $end]);
         $context->applyTo($items);
         $items = $items->orderBy('time_slot')->get();
+
         return ['data' => $items];
     }
 
     public function show(Request $request, Court $court)
     {
-        if (!$this->canViewCourt($request, $court)) {
+        if (! $this->canViewCourt($request, $court)) {
             return response()->json(['message' => 'Not found'], 404);
         }
+
         return $court->load(['staff.role']);
     }
 
     public function availability(Request $request, Court $court)
     {
-        if (!$this->canViewCourt($request, $court)) {
+        if (! $this->canViewCourt($request, $court)) {
             return response()->json(['message' => 'Not found'], 404);
         }
         $date = $request->query('date'); // YYYY-MM-DD
-        if (!$date) {
+        if (! $date) {
             return response()->json(['message' => 'date is required (YYYY-MM-DD)'], 422);
         }
         try {
-            $dayStart = Carbon::parse($date . ' 00:00:00');
+            $dayStart = Carbon::parse($date.' 00:00:00');
         } catch (\Throwable $e) {
             return response()->json(['message' => 'invalid date'], 422);
         }
         $context = BusinessContext::fromRequest($request);
         $staffId = $request->query('staff_id');
         if ($staffId !== null) {
-            if (!$context->isValid()) {
+            if (! $context->isValid()) {
                 return response()->json(['message' => 'Business not found'], 404);
             }
             $staffQuery = Staff::query()->whereKey($staffId)->where('is_active', true);
@@ -121,11 +129,12 @@ class CourtController extends Controller
             $staff = $staffQuery
                 ->whereHas('courts', fn ($query) => $query->whereKey($court->id))
                 ->first();
-            if (!$staff) {
+            if (! $staff) {
                 return response()->json(['message' => 'Selected professional cannot perform this service'], 422);
             }
 
             $slots = $this->availability->slots($court, $staff, $dayStart->toDateString());
+
             return response()->json([
                 'slots' => $slots,
                 'booked' => [],
@@ -157,19 +166,23 @@ class CourtController extends Controller
     {
         // Expect formats like: "10:00 AM to 12:00 PM"
         if (preg_match('/to\s*(\d{1,2}):(\d{2})\s*([AP]M)/i', $slot, $m)) {
-            $h = ((int)$m[1]) % 12;
-            $min = (int)$m[2];
+            $h = ((int) $m[1]) % 12;
+            $min = (int) $m[2];
             $ampm = strtoupper($m[3]);
-            if ($ampm === 'PM') $h += 12;
+            if ($ampm === 'PM') {
+                $h += 12;
+            }
+
             return (clone $start)->setTime($h, $min, 0);
         }
+
         return (clone $start)->addHours($fallbackHours ?: 1);
     }
 
     public function store(Request $request)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
         if ($response = $this->authorizeBusinessAdmin($request, $context)) {
@@ -198,7 +211,7 @@ class CourtController extends Controller
                 $this->storeUploadedImage($request->file('image')),
                 ...($data['images'] ?? []),
             ]));
-        } elseif (!empty($data['images']) && is_array($data['images'])) {
+        } elseif (! empty($data['images']) && is_array($data['images'])) {
             $data['images'] = $this->processAndValidateImages($data['images']);
         }
         $court = Court::create(array_merge($data, [
@@ -206,29 +219,31 @@ class CourtController extends Controller
             'business_id' => $context->businessId(),
             'status' => 'active',
         ]));
+
         return response()->json($court, 201);
     }
 
     public function mine(Request $request)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
-        if (!$request->user()->canManageBusiness($context->currentBusiness())) {
+        if (! $request->user()->canManageBusiness($context->currentBusiness())) {
             return response()->json(['data' => []]);
         }
         $perPage = $this->perPageFromRequest($request);
         $query = Court::with(['staff.role'])->latest();
         $context->applyTo($query);
         $result = $query->paginate($perPage)->withQueryString();
+
         return $this->paginatedResponse($result);
     }
 
     public function update(Request $request, Court $court)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
         if ($response = $this->authorizeBusinessAdmin($request, $context)) {
@@ -264,13 +279,14 @@ class CourtController extends Controller
         }
         $court->fill($data);
         $court->save();
+
         return $court->fresh();
     }
 
     public function destroy(Request $request, Court $court)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
         if ($response = $this->authorizeBusinessAdmin($request, $context)) {
@@ -278,14 +294,20 @@ class CourtController extends Controller
         }
         $court->status = 'inactive';
         $court->save();
+
         return response()->json(['message' => 'Court deactivated', 'court' => $court]);
     }
 
     private function perPageFromRequest(Request $request): int
     {
         $per = (int) $request->query('per_page', 20);
-        if ($per < 1) $per = 1;
-        if ($per > 50) $per = 50;
+        if ($per < 1) {
+            $per = 1;
+        }
+        if ($per > 50) {
+            $per = 50;
+        }
+
         return $per;
     }
 
@@ -310,13 +332,14 @@ class CourtController extends Controller
         foreach ($images as $index => $img) {
             $stored[] = $this->storeImageString($img, $index);
         }
+
         return $stored;
     }
 
     private function storeUploadedImage(UploadedFile $image): string
     {
         $path = $image->store('courts', 'public');
-        if (!$path) {
+        if (! $path) {
             throw ValidationException::withMessages([
                 'image' => ['Unable to store the uploaded image.'],
             ]);
@@ -327,7 +350,7 @@ class CourtController extends Controller
 
     private function storeImageString(mixed $img, ?int $index = null): string
     {
-        if (!is_string($img)) {
+        if (! is_string($img)) {
             $this->failImageValidation($index, 'Image entry must be a string.');
         }
         $trim = trim($img);
@@ -358,12 +381,12 @@ class CourtController extends Controller
             $mime = 'image/jpeg';
             if (preg_match('/data:(.*?);base64/', $meta, $matches)) {
                 $candidate = $matches[1] ?: $mime;
-                if (!in_array($candidate, $allowedMimes, true)) {
+                if (! in_array($candidate, $allowedMimes, true)) {
                     $this->failImageValidation($index, 'Unsupported image mime type.');
                 }
                 $mime = $candidate;
             }
-            if (!in_array($mime, $allowedMimes, true)) {
+            if (! in_array($mime, $allowedMimes, true)) {
                 $this->failImageValidation($index, 'Unsupported image mime type.');
             }
             $binary = base64_decode($data, true);
@@ -373,6 +396,7 @@ class CourtController extends Controller
             if (strlen($binary) > $maxBytes) {
                 $this->failImageValidation($index, 'Image is too large.');
             }
+
             return $this->storeBinaryImage($binary, $mime);
         }
 
@@ -385,6 +409,7 @@ class CourtController extends Controller
             if (strlen($binary) > $maxBytes) {
                 $this->failImageValidation($index, 'Image is too large.');
             }
+
             // Default to jpeg for bare base64 images
             return $this->storeBinaryImage($binary, 'image/jpeg');
         }
@@ -400,8 +425,9 @@ class CourtController extends Controller
             'image/webp' => 'webp',
             default => 'jpg',
         };
-        $name = 'courts/' . Str::uuid() . '.' . $ext;
+        $name = 'courts/'.Str::uuid().'.'.$ext;
         Storage::disk('public')->put($name, $binary);
+
         return Storage::url($name);
     }
 
@@ -419,22 +445,23 @@ class CourtController extends Controller
             return true;
         }
         $user = $request->user();
+
         return $user && $user->canManageBusiness($court->business);
     }
 
-    private function authorizeBusinessAdmin(Request $request, BusinessContext $context): ?\Illuminate\Http\JsonResponse
+    private function authorizeBusinessAdmin(Request $request, BusinessContext $context): ?JsonResponse
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
         $business = $context->currentBusiness();
-        if (!$business) {
+        if (! $business) {
             return response()->json(['message' => 'Business not found'], 404);
         }
 
-        if (!$context->userCanManageBusiness($user, $business)) {
+        if (! $context->userCanManageBusiness($user, $business)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

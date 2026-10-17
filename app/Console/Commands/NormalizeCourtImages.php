@@ -2,20 +2,22 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Court;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Models\Court;
 
 class NormalizeCourtImages extends Command
 {
     protected $signature = 'courts:normalize-images {--dry-run}';
+
     protected $description = 'Normalize courts.images to a JSON array (wrap or decode when stored as string)';
 
     public function handle(): int
     {
         $dry = (bool) $this->option('dry-run');
-        $count = 0; $updated = 0;
+        $count = 0;
+        $updated = 0;
 
         Court::chunk(200, function ($chunk) use (&$count, &$updated, $dry) {
             foreach ($chunk as $court) {
@@ -25,14 +27,15 @@ class NormalizeCourtImages extends Command
                     continue;
                 }
                 $updated++;
-                if (!$dry) {
+                if (! $dry) {
                     $court->images = $normalized;
                     $court->save();
                 }
             }
         });
 
-        $this->info("Scanned: {$count} courts. Normalized: {$updated}. Dry-run: " . ($dry ? 'yes' : 'no'));
+        $this->info("Scanned: {$count} courts. Normalized: {$updated}. Dry-run: ".($dry ? 'yes' : 'no'));
+
         return self::SUCCESS;
     }
 
@@ -45,13 +48,18 @@ class NormalizeCourtImages extends Command
             $converted = [];
             foreach ($img as $item) {
                 $value = $this->convertEntry($item);
-                if ($value) $converted[] = $value;
+                if ($value) {
+                    $converted[] = $value;
+                }
             }
+
             return $converted;
         }
         if (is_string($img)) {
             $trim = trim($img);
-            if ($trim === '') return [];
+            if ($trim === '') {
+                return [];
+            }
             if (str_starts_with($trim, '[')) {
                 try {
                     $decoded = json_decode($trim, true, 512, JSON_THROW_ON_ERROR);
@@ -63,9 +71,13 @@ class NormalizeCourtImages extends Command
                 }
             }
             $value = $this->convertEntry($trim);
-            if ($value) return [$value];
+            if ($value) {
+                return [$value];
+            }
+
             return [];
         }
+
         return false;
     }
 
@@ -74,21 +86,28 @@ class NormalizeCourtImages extends Command
         if (is_array($value)) {
             foreach ($value as $v) {
                 $nested = $this->convertEntry($v);
-                if ($nested) return $nested;
+                if ($nested) {
+                    return $nested;
+                }
             }
+
             return null;
         }
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return null;
         }
         $trim = trim($value);
-        if ($trim === '') return null;
+        if ($trim === '') {
+            return null;
+        }
         if (Str::startsWith($trim, ['http://', 'https://', '/storage/'])) {
             return $trim;
         }
         if (Str::startsWith($trim, 'data:image')) {
             $parts = explode(',', $trim, 2);
-            if (count($parts) !== 2) return null;
+            if (count($parts) !== 2) {
+                return null;
+            }
             $meta = $parts[0];
             $data = $parts[1];
             $mime = 'image/jpeg';
@@ -96,7 +115,10 @@ class NormalizeCourtImages extends Command
                 $mime = $matches[1] ?: $mime;
             }
             $binary = base64_decode($data, true);
-            if ($binary === false) return null;
+            if ($binary === false) {
+                return null;
+            }
+
             return $this->storeBinaryImage($binary, $mime);
         }
         if (strlen($trim) > 100 && preg_match('/^[A-Za-z0-9+\/]+=*$/', $trim)) {
@@ -112,6 +134,7 @@ class NormalizeCourtImages extends Command
                 return $this->storeBinaryImage($binary, $mime);
             }
         }
+
         return $trim;
     }
 
@@ -123,8 +146,9 @@ class NormalizeCourtImages extends Command
             'image/webp' => 'webp',
             default => 'jpg',
         };
-        $name = 'courts/' . Str::uuid() . '.' . $ext;
+        $name = 'courts/'.Str::uuid().'.'.$ext;
         Storage::disk('public')->put($name, $binary);
+
         return Storage::url($name);
     }
 }

@@ -14,6 +14,7 @@ class Booking extends Model
      * Terminal states (for example cancelled and rejected) must immediately free it.
      */
     public const BLOCKING_STATUSES = ['pending', 'confirmed'];
+
     public const PAYMENT_STATUSES = ['unpaid', 'paid'];
 
     protected $fillable = [
@@ -62,12 +63,35 @@ class Booking extends Model
         });
     }
 
-    public function user() { return $this->belongsTo(User::class); }
-    public function court() { return $this->belongsTo(Court::class); }
-    public function business() { return $this->belongsTo(Business::class); }
-    public function staff() { return $this->belongsTo(Staff::class); }
-    public function rebookedFrom() { return $this->belongsTo(self::class, 'rebooked_from_booking_id'); }
-    public function rebookings() { return $this->hasMany(self::class, 'rebooked_from_booking_id'); }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function court()
+    {
+        return $this->belongsTo(Court::class);
+    }
+
+    public function business()
+    {
+        return $this->belongsTo(Business::class);
+    }
+
+    public function staff()
+    {
+        return $this->belongsTo(Staff::class);
+    }
+
+    public function rebookedFrom()
+    {
+        return $this->belongsTo(self::class, 'rebooked_from_booking_id');
+    }
+
+    public function rebookings()
+    {
+        return $this->hasMany(self::class, 'rebooked_from_booking_id');
+    }
 
     public function scopeBlocking($query)
     {

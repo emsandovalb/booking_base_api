@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Business;
 use App\Support\BrandingConfig;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 
 class AppConfigController extends Controller
@@ -32,7 +32,7 @@ class AppConfigController extends Controller
     {
         $business = Business::resolveBySlug($slug);
 
-        if (!$business) {
+        if (! $business) {
             return response()->json([
                 'message' => 'Business not found.',
             ], 404);
@@ -45,7 +45,7 @@ class AppConfigController extends Controller
     {
         $business = Business::resolveBySlug($slug);
 
-        if (!$business) {
+        if (! $business) {
             return response()->json([
                 'message' => 'Business not found.',
             ], 404);
@@ -110,7 +110,7 @@ class AppConfigController extends Controller
             'secondary_color' => $colors['primary_light'] ?? $colors['primary_gold_light'] ?? '',
             'background_color' => $colors['background'] ?? '',
             'contact_phone' => $contact['phone'] ?? '',
-            'api_base_url' => rtrim($request->getSchemeAndHttpHost(), '/') . '/api/v1',
+            'api_base_url' => rtrim($request->getSchemeAndHttpHost(), '/').'/api/v1',
             'business_type' => $business->business_type ?? 'generic',
             'identity' => $identity,
             'assets' => $assets,

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Business;
-use App\Support\BrandingConfig;
 use App\Services\SuperAdmin\AuditLogService;
+use App\Support\BrandingConfig;
 use Illuminate\Http\Request;
 
 class WorkspaceController extends Controller

@@ -46,7 +46,7 @@ class AuditLogService
             ->search($filters['search'] ?? null)
             ->latestFirst();
 
-        if (!$business && !empty($filters['business'])) {
+        if (! $business && ! empty($filters['business'])) {
             $query->where('business_id', $filters['business']);
         }
 

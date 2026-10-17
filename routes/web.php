@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuperAdmin\BusinessController;
 use App\Http\Controllers\SuperAdmin\BusinessMemberController;
 use App\Http\Controllers\SuperAdmin\DashboardController;
@@ -9,6 +8,7 @@ use App\Http\Controllers\SuperAdmin\WorkspaceController;
 use App\Http\Controllers\Web\BusinessAppController;
 use App\Http\Controllers\Web\PublicBookingController;
 use App\Http\Controllers\Web\PwaController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');

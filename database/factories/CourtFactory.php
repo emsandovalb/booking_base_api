@@ -21,7 +21,7 @@ class CourtFactory extends Factory
         ]);
 
         return [
-            'name' => $resourceName . ' ' . fake()->unique()->numberBetween(1, 99),
+            'name' => $resourceName.' '.fake()->unique()->numberBetween(1, 99),
             'address' => fake()->address(),
             'price_per_hour' => fake()->randomFloat(2, 10, 100),
             'rating' => fake()->randomFloat(1, 3, 5),

@@ -58,7 +58,7 @@ class StaffSeeder extends Seeder
 
         foreach ($staffMembers as $member) {
             $role = $roles[$member['role']] ?? null;
-            if (!$role) {
+            if (! $role) {
                 continue;
             }
 
@@ -76,7 +76,7 @@ class StaffSeeder extends Seeder
 
             foreach ($member['services'] as $index) {
                 $court = $courts->get($index);
-                if (!$court) {
+                if (! $court) {
                     continue;
                 }
 

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Booking;
 use App\Models\Business;
 use App\Models\Court;
 use App\Models\Staff;
@@ -30,7 +29,7 @@ class ReservationStaffSelectionTest extends TestCase
     {
         return Business::create([
             'name' => 'Barberia Tres Amigos',
-            'slug' => 'barberia-tres-amigos-' . uniqid(),
+            'slug' => 'barberia-tres-amigos-'.uniqid(),
             'business_type' => 'barbershop',
             'status' => 'active',
         ]);
@@ -45,7 +44,7 @@ class ReservationStaffSelectionTest extends TestCase
     {
         $role = StaffRole::create([
             'name' => 'Consultant',
-            'slug' => 'consultant-' . uniqid(),
+            'slug' => 'consultant-'.uniqid(),
             'description' => 'Consultant',
         ]);
 
@@ -53,7 +52,7 @@ class ReservationStaffSelectionTest extends TestCase
             'business_id' => $business->id,
             'staff_role_id' => $role->id,
             'name' => $name,
-            'email' => strtolower(str_replace(' ', '.', $name)) . '@example.com',
+            'email' => strtolower(str_replace(' ', '.', $name)).'@example.com',
             'is_active' => true,
         ]);
 
@@ -139,7 +138,7 @@ class ReservationStaffSelectionTest extends TestCase
             'staff_id' => $carlos->id,
         ]);
 
-        $this->getJson('/api/v1/reservations/' . $created['id'], $this->headers($business))
+        $this->getJson('/api/v1/reservations/'.$created['id'], $this->headers($business))
             ->assertOk()
             ->assertJsonPath('staff_id', $carlos->id)
             ->assertJsonPath('staff.name', 'Carlos Ramírez');

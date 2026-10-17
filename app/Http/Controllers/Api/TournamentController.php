@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Team;
-use App\Models\TournamentTeam;
 use App\Models\Tournament;
+use App\Models\TournamentTeam;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class TournamentController extends Controller
 {
@@ -54,7 +54,7 @@ class TournamentController extends Controller
 
         $team = Team::with('users')->findOrFail($data['team_id']);
 
-        if (!$this->canManageTeam($request, $team)) {
+        if (! $this->canManageTeam($request, $team)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -87,7 +87,7 @@ class TournamentController extends Controller
 
     public function updateEnrollment(Request $request, Tournament $tournament, Team $team)
     {
-        if (!$this->canManageTournament($request, $tournament)) {
+        if (! $this->canManageTournament($request, $tournament)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -99,7 +99,7 @@ class TournamentController extends Controller
             ->where('team_id', $team->id)
             ->first();
 
-        if (!$enrollment) {
+        if (! $enrollment) {
             return response()->json(['message' => 'Enrollment not found'], 404);
         }
 
@@ -115,7 +115,7 @@ class TournamentController extends Controller
 
     public function store(Request $request)
     {
-        if (!$this->isAdmin($request)) {
+        if (! $this->isAdmin($request)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -147,7 +147,7 @@ class TournamentController extends Controller
 
     public function update(Request $request, Tournament $tournament)
     {
-        if (!$this->canManageTournament($request, $tournament)) {
+        if (! $this->canManageTournament($request, $tournament)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -177,7 +177,7 @@ class TournamentController extends Controller
 
     public function destroy(Request $request, Tournament $tournament)
     {
-        if (!$this->canManageTournament($request, $tournament)) {
+        if (! $this->canManageTournament($request, $tournament)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -212,7 +212,7 @@ class TournamentController extends Controller
     private function canManageTeam(Request $request, Team $team): bool
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -241,7 +241,7 @@ class TournamentController extends Controller
 
     private function storeCoverImage(Request $request, array &$data, ?Tournament $existing = null): void
     {
-        if (!$request->hasFile('cover_image')) {
+        if (! $request->hasFile('cover_image')) {
             return;
         }
 
@@ -261,6 +261,7 @@ class TournamentController extends Controller
         if ($per > 50) {
             $per = 50;
         }
+
         return $per;
     }
 

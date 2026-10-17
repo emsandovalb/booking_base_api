@@ -33,7 +33,7 @@ class TournamentUpdateDeleteTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $response = $this->putJson('/api/v1/tournaments/' . $tournament->id, [
+        $response = $this->putJson('/api/v1/tournaments/'.$tournament->id, [
             'name' => 'Copa Actualizada',
             'court_id' => $court->id,
             'max_teams' => 16,
@@ -65,7 +65,7 @@ class TournamentUpdateDeleteTest extends TestCase
 
         Sanctum::actingAs($other);
 
-        $response = $this->putJson('/api/v1/tournaments/' . $tournament->id, [
+        $response = $this->putJson('/api/v1/tournaments/'.$tournament->id, [
             'name' => 'Copa Robada',
         ]);
 
@@ -86,7 +86,7 @@ class TournamentUpdateDeleteTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $response = $this->putJson('/api/v1/tournaments/' . $tournament->id, [
+        $response = $this->putJson('/api/v1/tournaments/'.$tournament->id, [
             'court_id' => 999999,
             'max_teams' => 1,
         ]);
@@ -108,7 +108,7 @@ class TournamentUpdateDeleteTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $response = $this->deleteJson('/api/v1/tournaments/' . $tournament->id);
+        $response = $this->deleteJson('/api/v1/tournaments/'.$tournament->id);
 
         $response->assertOk();
         $response->assertJsonPath('message', 'Tournament closed');

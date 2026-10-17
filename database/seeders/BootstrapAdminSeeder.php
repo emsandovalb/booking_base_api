@@ -34,7 +34,7 @@ class BootstrapAdminSeeder extends Seeder
 
         $user = User::where('email', $email)->first();
 
-        if (!$user) {
+        if (! $user) {
             $this->command?->warn(
                 "No user found with email [{$email}]. Register that account first, then re-run this seeder."
             );

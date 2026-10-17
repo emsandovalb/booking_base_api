@@ -80,7 +80,7 @@ class BusinessTenantScopingTest extends TestCase
             'is_primary' => true,
         ]);
 
-        $response = $this->getJson('/api/v1/resources/' . $resourceA->id . '/staff', [
+        $response = $this->getJson('/api/v1/resources/'.$resourceA->id.'/staff', [
             'X-Business-Slug' => 'barberia-tres-amigos',
         ]);
 
@@ -182,7 +182,7 @@ class BusinessTenantScopingTest extends TestCase
         $staff = $this->createStaff($business, $role, 'Carlos Barber');
         $resource = $this->createResource($business, 'Tres Amigos Corte');
 
-        $response = $this->postJson('/api/v1/staff/' . $staff->id . '/services', [
+        $response = $this->postJson('/api/v1/staff/'.$staff->id.'/services', [
             'resource_id' => $resource->id,
         ], [
             'X-Business-Slug' => $business->slug,
@@ -204,7 +204,7 @@ class BusinessTenantScopingTest extends TestCase
         $staff = $this->createStaff($tresAmigos, $role, 'Carlos Barber');
         $resource = $this->createResource($salonAurora, 'Aurora Facial');
 
-        $response = $this->postJson('/api/v1/staff/' . $staff->id . '/services', [
+        $response = $this->postJson('/api/v1/staff/'.$staff->id.'/services', [
             'resource_id' => $resource->id,
         ], [
             'X-Business-Slug' => $tresAmigos->slug,
@@ -226,7 +226,7 @@ class BusinessTenantScopingTest extends TestCase
         $staff = $this->createStaff($salonAurora, $role, 'Alicia Stylist');
         $resource = $this->createResource($tresAmigos, 'Tres Amigos Corte');
 
-        $response = $this->postJson('/api/v1/staff/' . $staff->id . '/services', [
+        $response = $this->postJson('/api/v1/staff/'.$staff->id.'/services', [
             'resource_id' => $resource->id,
         ], [
             'X-Business-Slug' => $salonAurora->slug,
@@ -248,7 +248,7 @@ class BusinessTenantScopingTest extends TestCase
         $staff = $this->createStaff($tresAmigos, $role, 'Carlos Barber');
         $resource = $this->createResource($salonAurora, 'Aurora Facial');
 
-        $response = $this->postJson('/api/v1/staff/' . $staff->id . '/services', [
+        $response = $this->postJson('/api/v1/staff/'.$staff->id.'/services', [
             'resource_id' => $resource->id,
         ]);
 
@@ -296,7 +296,7 @@ class BusinessTenantScopingTest extends TestCase
             'business_id' => $business->id,
             'staff_role_id' => $role->id,
             'name' => $name,
-            'email' => strtolower(str_replace(' ', '.', $name)) . '@example.com',
+            'email' => strtolower(str_replace(' ', '.', $name)).'@example.com',
             'is_active' => true,
         ]);
     }

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 /**
@@ -96,7 +97,7 @@ class WebLoginRateLimitTest extends TestCase
 
         // The window is reset: five more attempts should be available
         // again immediately, not still counting from before the success.
-        \Illuminate\Support\Facades\Auth::logout();
+        Auth::logout();
         for ($i = 0; $i < 5; $i++) {
             $this->post('/login', [
                 'email' => 'admin@example.com',

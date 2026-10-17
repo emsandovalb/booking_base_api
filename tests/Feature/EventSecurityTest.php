@@ -73,4 +73,3 @@ class EventSecurityTest extends TestCase
         $response->assertOk();
     }
 }
-

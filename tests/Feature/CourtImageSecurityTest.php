@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Models\Business;
 use App\Models\Court;
 use App\Models\User;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -26,7 +26,7 @@ class CourtImageSecurityTest extends TestCase
     {
         $business = Business::create([
             'name' => 'Barberia Tres Amigos',
-            'slug' => 'barberia-tres-amigos-' . uniqid(),
+            'slug' => 'barberia-tres-amigos-'.uniqid(),
             'business_type' => 'barbershop',
             'status' => 'active',
         ]);
@@ -131,7 +131,7 @@ class CourtImageSecurityTest extends TestCase
         $business = $this->createBusinessForAdmin($admin);
 
         $largeBinary = random_bytes(3 * 1024 * 1024);
-        $dataUrl = 'data:image/jpeg;base64,' . base64_encode($largeBinary);
+        $dataUrl = 'data:image/jpeg;base64,'.base64_encode($largeBinary);
 
         $response = $this->postJson('/api/v1/courts', [
             'name' => 'Test Court',

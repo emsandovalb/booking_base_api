@@ -104,6 +104,7 @@ class BusinessAppController extends Controller
                         'booking_code' => Str::upper(Str::random(8)),
                         'total_price' => round((float) $item->court->price_per_hour, 2),
                     ]);
+
                     return $replacement;
                 });
             });

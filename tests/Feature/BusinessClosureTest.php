@@ -21,7 +21,7 @@ class BusinessClosureTest extends TestCase
     {
         return Business::create([
             'name' => 'Barberia Tres Amigos',
-            'slug' => 'barberia-tres-amigos-' . uniqid(),
+            'slug' => 'barberia-tres-amigos-'.uniqid(),
             'business_type' => 'barbershop',
             'status' => 'active',
         ]);
@@ -37,7 +37,7 @@ class BusinessClosureTest extends TestCase
 
     private function createStaff(Business $business, Court $court): Staff
     {
-        $role = StaffRole::create(['name' => 'Consultant', 'slug' => 'consultant-' . uniqid(), 'description' => 'Consultant']);
+        $role = StaffRole::create(['name' => 'Consultant', 'slug' => 'consultant-'.uniqid(), 'description' => 'Consultant']);
         $staff = Staff::create([
             'business_id' => $business->id,
             'staff_role_id' => $role->id,
@@ -156,7 +156,7 @@ class BusinessClosureTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'data');
 
-        $this->deleteJson('/api/v1/closures/' . $created['id'], [], $this->headers($business))
+        $this->deleteJson('/api/v1/closures/'.$created['id'], [], $this->headers($business))
             ->assertOk();
 
         $this->assertDatabaseMissing('business_closures', ['id' => $created['id']]);
@@ -175,7 +175,7 @@ class BusinessClosureTest extends TestCase
         ], $this->headers($businessA))->json();
 
         Sanctum::actingAs($ownerB);
-        $this->deleteJson('/api/v1/closures/' . $closure['id'], [], $this->headers($businessB))
+        $this->deleteJson('/api/v1/closures/'.$closure['id'], [], $this->headers($businessB))
             ->assertNotFound();
 
         $this->assertDatabaseHas('business_closures', ['id' => $closure['id']]);

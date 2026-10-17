@@ -13,7 +13,7 @@ class ResourceStaffController extends Controller
     public function index(Request $request, Court $resource)
     {
         $context = BusinessContext::fromRequest($request);
-        if (!$context->isValid()) {
+        if (! $context->isValid()) {
             return response()->json(['message' => 'Business not found'], 404);
         }
 

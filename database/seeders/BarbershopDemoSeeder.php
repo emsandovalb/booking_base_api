@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Court;
 use App\Models\Booking;
 use App\Models\Business;
+use App\Models\Court;
 use App\Models\Staff;
 use App\Models\StaffRole;
 use App\Models\StaffService;
@@ -311,7 +311,7 @@ class BarbershopDemoSeeder extends Seeder
 
             foreach ($barberData['services'] as $index => $serviceName) {
                 $service = $serviceModels[$serviceName] ?? null;
-                if (!$service) {
+                if (! $service) {
                     continue;
                 }
 
@@ -382,7 +382,7 @@ class BarbershopDemoSeeder extends Seeder
             );
         }
 
-        if (!empty($serviceModels)) {
+        if (! empty($serviceModels)) {
             Booking::query()
                 ->whereNull('business_id')
                 ->whereIn('court_id', array_map(
@@ -393,7 +393,7 @@ class BarbershopDemoSeeder extends Seeder
         }
 
         // Future appointments make the tenant dashboards immediately useful in a sales demo.
-        if ($tresAmigosBusiness && !empty($serviceModels)) {
+        if ($tresAmigosBusiness && ! empty($serviceModels)) {
             $demoService = $serviceModels['Corte de cabello'];
             $demoStaff = Staff::query()->where('business_id', $tresAmigosBusiness->id)->where('name', 'Carlos Ramírez')->first();
             if ($demoStaff) {

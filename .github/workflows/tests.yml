@@ -25,5 +25,8 @@ jobs:
 
       - run: composer install --no-interaction --no-progress --prefer-dist
 
+      - name: Check code style
+        run: vendor/bin/pint --test
+
       # APP_ENV=testing (phpunit.xml) makes Laravel read .env.testing.
       - run: php artisan test
