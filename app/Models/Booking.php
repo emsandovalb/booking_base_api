@@ -15,6 +15,7 @@ class Booking extends Model
      */
     public const BLOCKING_STATUSES = ['pending', 'confirmed'];
     public const PAYMENT_STATUSES = ['unpaid', 'paid'];
+    public const CONFIRMED_RESCHEDULE_MIN_HOURS = 24;
 
     protected $fillable = [
         'user_id',
@@ -68,6 +69,23 @@ class Booking extends Model
     public function staff() { return $this->belongsTo(Staff::class); }
     public function rebookedFrom() { return $this->belongsTo(self::class, 'rebooked_from_booking_id'); }
     public function rebookings() { return $this->hasMany(self::class, 'rebooked_from_booking_id'); }
+
+    /**
+     * Why this reservation cannot be rescheduled now, or null if it can.
+     * Pending requests can be moved by the customer or the business. A
+     * confirmed appointment is a commitment: only the business may move it,
+     * and only with at least 24 hours' notice. $now is the business clock.
+     */
+    public function rescheduleBlockReason(bool $byManager, \Carbon\CarbonInterface $now): ?string
+    {
+        if ($this->status === 'pending') return null;
+        if ($this->status !== 'confirmed') return 'Only pending or confirmed reservations can be rescheduled';
+        if (!$byManager) return 'Only the business can reschedule a confirmed reservation';
+        if ($now->diffInHours($this->date, false) < self::CONFIRMED_RESCHEDULE_MIN_HOURS) {
+            return 'Confirmed reservations can only be rescheduled at least 24 hours in advance';
+        }
+        return null;
+    }
 
     public function scopeBlocking($query)
     {

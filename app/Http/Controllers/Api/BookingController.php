@@ -67,11 +67,12 @@ class BookingController extends Controller
     {
         $context = $this->context($request);
         if (!$context) return response()->json(['message' => 'Business not found'], 404);
-        if ($booking->user_id !== $request->user()->id && !$this->canManage($request, $booking, $context)) {
+        $canManage = $this->canManage($request, $booking, $context);
+        if ($booking->user_id !== $request->user()->id && !$canManage) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
-        if ($booking->status !== 'pending') {
-            return response()->json(['message' => 'Only pending reservations can be rescheduled'], 422);
+        if ($reason = $booking->rescheduleBlockReason($canManage, $context->business()->localNow())) {
+            return response()->json(['message' => $reason], 422);
         }
 
         // A reschedule can retain its service and professional when the client only sends a new date/time.
@@ -87,6 +88,9 @@ class BookingController extends Controller
             'customer_phone' => $booking->customer_phone,
             'customer_email' => $booking->customer_email,
             'rebooked_from_booking_id' => $booking->id,
+            // Moving an appointment keeps its confirmation and payment.
+            'status' => $booking->status,
+            'payment_status' => $booking->payment_status,
         ], $booking);
     }
 
@@ -149,7 +153,8 @@ class BookingController extends Controller
                     $original = $replacing
                         ? Booking::query()->lockForUpdate()->findOrFail($replacing->id)
                         : null;
-                    if ($original && $original->status !== 'pending') return null;
+                    // The status checked before taking the lock must still hold.
+                    if ($original && $original->status !== $replacing->status) return null;
                     if (!$this->availability->hasSlot($service, $staff, $start->toDateString(), $start->format('H:i'), $replacing?->id)) {
                         return null;
                     }
@@ -159,7 +164,10 @@ class BookingController extends Controller
                         // Free the old slot inside this transaction before inserting the
                         // replacement. If insertion fails, the transaction restores it.
                         if ($original) $original->update(['status' => 'cancelled']);
-                        $booking = Booking::create(array_merge($attributes, [
+                        $booking = Booking::create(array_merge([
+                            'status' => 'pending',
+                            'payment_status' => 'unpaid',
+                        ], $attributes, [
                             'court_id' => $service->id,
                             'business_id' => $context->businessId(),
                             'staff_id' => $staff?->id,
@@ -167,8 +175,6 @@ class BookingController extends Controller
                             'time_slot' => $this->availability->slotLabel($start, $service),
                             'duration_hours' => max(1, (int) ceil($minutes / 60)),
                             'duration_minutes' => $minutes,
-                            'status' => 'pending',
-                            'payment_status' => 'unpaid',
                             'booking_code' => Str::upper(Str::random(8)),
                             // Server-side only. price_per_hour is a legacy column
                             // name: it holds the service's flat price per appointment.

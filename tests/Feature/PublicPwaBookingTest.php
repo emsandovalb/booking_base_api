@@ -130,8 +130,8 @@ class PublicPwaBookingTest extends TestCase
         $this->get("/app/urban-cut/bookings/{$booking->id}")->assertForbidden();
         $this->post("/app/urban-cut/bookings/{$booking->id}/confirm")->assertForbidden();
 
-        // Reschedule only works while pending — the same rule the native API
-        // enforces in BookingController::rebook() — and it replaces the
+        // Reschedule follows Booking::rescheduleBlockReason(), the same rule
+        // the native API enforces in BookingController::rebook(), and it replaces the
         // booking with a new row (linked via rebooked_from_booking_id)
         // instead of mutating the original in place.
         $this->post("/app/barber-house/bookings/{$booking->id}/reschedule", [

@@ -75,18 +75,27 @@ class BusinessAppController extends Controller
             'date' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.$business->localNow()->toDateString()],
             'time' => ['required', 'date_format:H:i'],
         ]);
-        abort_unless($item->status === 'pending' && $item->staff, 422, 'Solo se pueden reprogramar citas pendientes con profesional asignado');
+        abort_unless($item->staff, 422, 'Solo se pueden reprogramar citas con profesional asignado');
+        $reason = $item->rescheduleBlockReason(true, $business->localNow());
+        abort_if($reason !== null, 422, $item->status === 'confirmed'
+            ? 'Las citas confirmadas solo se pueden reprogramar con al menos 24 horas de anticipación'
+            : 'Solo se pueden reprogramar citas pendientes o confirmadas');
         $start = CarbonImmutable::createFromFormat('Y-m-d H:i', "{$data['date']} {$data['time']}");
         $lock = Cache::lock("booking-lock:business:{$business->id}:staff:{$item->staff_id}", 10);
         try {
             $replacement = $lock->block(3, function () use ($business, $item, $start) {
                 return DB::transaction(function () use ($business, $item, $start) {
+                    $locked = $business->bookings()->whereKey($item->id)->lockForUpdate()->first();
+                    if (! $locked || $locked->status !== $item->status) {
+                        return null;
+                    }
                     if (! $this->availability->hasSlot($item->court, $item->staff, $start->toDateString(), $start->format('H:i'), $item->id)) {
                         return null;
                     }
                     $minutes = $this->availability->durationMinutes($item->court);
-                    // This is atomic with the insert; a failed replacement rolls the old
-                    // booking back to pending instead of losing the appointment.
+                    // This is atomic with the insert; a failed replacement restores the
+                    // old booking instead of losing the appointment.
+                    $previousStatus = $item->status;
                     $item->update(['status' => 'cancelled']);
                     $replacement = $business->bookings()->create([
                         'user_id' => $item->user_id,
@@ -100,8 +109,9 @@ class BusinessAppController extends Controller
                         'time_slot' => $this->availability->slotLabel($start, $item->court),
                         'duration_hours' => max(1, (int) ceil($minutes / 60)),
                         'duration_minutes' => $minutes,
-                        'status' => 'pending',
-                        'payment_status' => 'unpaid',
+                        // Moving an appointment keeps its confirmation and payment.
+                        'status' => $previousStatus,
+                        'payment_status' => $item->payment_status,
                         'booking_code' => Str::upper(Str::random(8)),
                         'total_price' => round((float) $item->court->price_per_hour, 2),
                     ]);
@@ -113,7 +123,9 @@ class BusinessAppController extends Controller
         }
         abort_unless($replacement, 422, 'Horario no disponible');
 
-        return back()->with('status', 'Cita reprogramada y marcada como pendiente.');
+        return back()->with('status', $replacement->status === 'confirmed'
+            ? 'Cita reprogramada; sigue confirmada.'
+            : 'Cita reprogramada y marcada como pendiente.');
     }
 
     public function services(Request $request, string $slug): View

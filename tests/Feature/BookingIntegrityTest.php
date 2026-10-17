@@ -134,6 +134,87 @@ class BookingIntegrityTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_the_business_can_reschedule_a_confirmed_appointment_with_24_hours_notice(): void
+    {
+        [$business, $service, $staff, $owner] = $this->catalog();
+        // Exactly 24 hours ahead of the local 10:00 "now".
+        $booking = $this->booking($business, $service, $staff, '2026-10-21 10:00:00', 'confirmed', 'paid');
+        Sanctum::actingAs($owner);
+
+        $this->postJson("/api/v1/reservations/{$booking->id}/rebook", [
+            'date' => '2026-10-22', 'time_slot' => '11:00',
+        ], $this->headers($business))
+            ->assertCreated()
+            ->assertJsonPath('status', 'confirmed')
+            ->assertJsonPath('payment_status', 'paid')
+            ->assertJsonPath('rebooked_from_booking_id', $booking->id);
+
+        $this->assertSame('cancelled', $booking->fresh()->status);
+    }
+
+    public function test_a_confirmed_appointment_cannot_be_rescheduled_within_24_hours(): void
+    {
+        [$business, $service, $staff, $owner] = $this->catalog();
+        $booking = $this->booking($business, $service, $staff, '2026-10-21 09:45:00', 'confirmed');
+        Sanctum::actingAs($owner);
+
+        $this->postJson("/api/v1/reservations/{$booking->id}/rebook", [
+            'date' => '2026-10-22', 'time_slot' => '11:00',
+        ], $this->headers($business))
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Confirmed reservations can only be rescheduled at least 24 hours in advance');
+
+        $this->assertSame('confirmed', $booking->fresh()->status);
+        $this->assertSame(1, Booking::count());
+    }
+
+    public function test_customers_cannot_reschedule_a_confirmed_appointment(): void
+    {
+        [$business, $service, $staff] = $this->catalog();
+        $client = User::factory()->create();
+        $booking = $this->booking($business, $service, $staff, '2026-10-23 10:00:00', 'confirmed', 'unpaid', $client);
+        Sanctum::actingAs($client);
+
+        $this->postJson("/api/v1/reservations/{$booking->id}/rebook", [
+            'date' => '2026-10-24', 'time_slot' => '11:00',
+        ], $this->headers($business))
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Only the business can reschedule a confirmed reservation');
+    }
+
+    public function test_customers_can_still_reschedule_a_pending_request_and_it_stays_pending(): void
+    {
+        [$business, $service, $staff] = $this->catalog();
+        $client = User::factory()->create();
+        $booking = $this->booking($business, $service, $staff, '2026-10-20 15:00:00', 'pending', 'unpaid', $client);
+        Sanctum::actingAs($client);
+
+        $this->postJson("/api/v1/reservations/{$booking->id}/rebook", [
+            'date' => '2026-10-21', 'time_slot' => '11:00',
+        ], $this->headers($business))
+            ->assertCreated()
+            ->assertJsonPath('status', 'pending');
+    }
+
+    public function test_owner_web_app_applies_the_same_24_hour_rule(): void
+    {
+        [$business, $service, $staff, $owner] = $this->catalog();
+        $soon = $this->booking($business, $service, $staff, '2026-10-21 09:00:00', 'confirmed');
+        $later = $this->booking($business, $service, $staff, '2026-10-23 09:00:00', 'confirmed', 'paid');
+        $this->actingAs($owner);
+
+        $this->post("/app/{$business->slug}/bookings/{$soon->id}/reschedule", ['date' => '2026-10-22', 'time' => '11:00'])
+            ->assertStatus(422);
+        $this->assertSame('confirmed', $soon->fresh()->status);
+
+        $this->post("/app/{$business->slug}/bookings/{$later->id}/reschedule", ['date' => '2026-10-24', 'time' => '11:00'])
+            ->assertRedirect();
+        $moved = Booking::where('rebooked_from_booking_id', $later->id)->firstOrFail();
+        $this->assertSame('confirmed', $moved->status);
+        $this->assertSame('paid', $moved->payment_status);
+        $this->assertSame('2026-10-24 11:00', $moved->date->format('Y-m-d H:i'));
+    }
+
     private function catalog(): array
     {
         $business = Business::create([
